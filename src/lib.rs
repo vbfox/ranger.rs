@@ -1,4 +1,4 @@
-use std::{fmt, ops::{self, Bound, RangeBounds}};
+use std::{borrow::Borrow, fmt, ops::{self, Bound, RangeBounds}};
 
 // --------------------------------------------------------------------------------------------------------------------
 // Range types
@@ -304,6 +304,74 @@ pub enum Range<Idx> {
 }
 
 impl<Idx> Range<Idx> {
+    /// A range containing no value
+    ///
+    /// `[]`
+    pub fn empty() -> Range<Idx> {
+        Range::Empty
+    }
+
+    /// A range between `start` (inclusive) and `end` (inclusive)
+    ///
+    /// `[start..end]`
+    pub fn continuous(start: Idx, end: Idx) -> Range<Idx> {
+        Range::Continuous(ContinuousRangeInclusive { start, end })
+    }
+
+    /// A range between `start` (exclusive) and `end` (exclusive)
+    ///
+    /// `(start..end)`
+    pub fn continuous_exclusive(start: Idx, end: Idx) -> Range<Idx> {
+        Range::ContinuousExclusive(ContinuousRangeExclusive { start, end })
+    }
+
+    /// A range between `start` (exclusive) and `end` (inclusive)
+    ///
+    /// `(start..end]`
+    pub fn continuous_start_exclusive(start: Idx, end: Idx) -> Range<Idx> {
+        Range::ContinuousStartExclusive(ContinuousRangeStartExclusive { start, end })
+    }
+
+    /// A range between `start` (inclusive) and `end` (exclusive)
+    ///
+    /// `[start..end)`
+    pub fn continuous_end_exclusive(start: Idx, end: Idx) -> Range<Idx> {
+        Range::ContinuousEndExclusive(ContinuousRangeEndExclusive { start, end })
+    }
+
+    /// A range starting from `start` (inclusive)
+    ///
+    /// `[start..)`
+    pub fn from(start: Idx) -> Range<Idx> {
+        Range::From(ContinuousRangeFromInclusive { start })
+    }
+
+    /// A range starting from `start` (exclusive)
+    ///
+    /// `(start..)`
+    pub fn from_exclusive(start: Idx) -> Range<Idx> {
+        Range::FromExclusive(ContinuousRangeFromExclusive { start })
+    }
+
+    /// A range ending with `end` (inclusive)
+    ///
+    /// `(..end]`
+    pub fn to(end: Idx) -> Range<Idx> {
+        Range::To(ContinuousRangeToInclusive { end })
+    }
+
+    /// A range ending with `end` (exclusive)
+    ///
+    /// `(..end)`
+    pub fn to_exclusive(end: Idx) -> Range<Idx> {
+        Range::ToExclusive(ContinuousRangeToInclusive { end })
+    }
+
+    /// A range containing all values
+    pub fn full() -> Range<Idx> {
+        Range::Full
+    }
+
     pub fn range_bounds(&self) -> Option<(Bound<&Idx>, Bound<&Idx>)> {
         match self {
             Range::Empty => None,
@@ -316,6 +384,23 @@ impl<Idx> Range<Idx> {
             Range::To(r) => Some((r.start_bound(), r.end_bound())),
             Range::ToExclusive(r) => Some((r.start_bound(), r.end_bound())),
             Range::Full => Some((Bound::Unbounded, Bound::Unbounded)),
+        }
+    }
+
+    pub fn contains(&self, value: impl Borrow<Idx>) -> bool
+    where Idx : PartialOrd
+    {
+        match self {
+            Range::Empty => false,
+            Range::Continuous(r) => r.contains(value.borrow()),
+            Range::ContinuousExclusive(r) => r.contains(value.borrow()),
+            Range::ContinuousStartExclusive(r) => r.contains(value.borrow()),
+            Range::ContinuousEndExclusive(r) => r.contains(value.borrow()),
+            Range::From(r) => r.contains(value.borrow()),
+            Range::FromExclusive(r) => r.contains(value.borrow()),
+            Range::To(r) => r.contains(value.borrow()),
+            Range::ToExclusive(r) => r.contains(value.borrow()),
+            Range::Full => true
         }
     }
 }
@@ -369,7 +454,7 @@ impl<Idx: fmt::Debug> fmt::Debug for Range<Idx> {
 }
 
 #[cfg(test)]
-mod tests {
+mod test_fmt_debug {
     use crate::Range;
 
     #[test]
@@ -400,5 +485,68 @@ mod tests {
     pub fn e() {
         let r: Range<u32> = (..5).into();
         assert_eq!(format!("{:?}", r), "(..5]");
+    }
+}
+
+#[cfg(test)]
+mod test_contains {
+    use crate::Range;
+
+    #[test]
+    pub fn empty() {
+        let r: Range<i32> = Range::Empty;
+        assert_eq!(r.contains(-500), false);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(42), false);
+        assert_eq!(r.contains(i32::MAX), false);
+    }
+
+    #[test]
+    pub fn continuous() {
+        let r: Range<_> = (1..=5).into();
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), true);
+        assert_eq!(r.contains(3), true);
+        assert_eq!(r.contains(5), true);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn continuous_exclusive() {
+        let r: Range<_> = Range::continuous_exclusive(1, 5);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), false);
+        assert_eq!(r.contains(3), true);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn continuous_start_exclusive() {
+        let r: Range<_> = Range::continuous_start_exclusive(1, 5);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), false);
+        assert_eq!(r.contains(3), true);
+        assert_eq!(r.contains(5), true);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn continuous_end_exclusive() {
+        let r: Range<_> = (1..5).into();
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), true);
+        assert_eq!(r.contains(3), true);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn full() {
+        let r: Range<i32> = Range::Full;
+        assert_eq!(r.contains(-500), true);
+        assert_eq!(r.contains(0), true);
+        assert_eq!(r.contains(42), true);
+        assert_eq!(r.contains(i32::MAX), true);
     }
 }
