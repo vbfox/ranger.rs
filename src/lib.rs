@@ -4,7 +4,7 @@ use std::{fmt, ops::{self, Bound, RangeBounds}};
 // Range types
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeInclusive<Idx> {
+pub struct ContinuousRangeInclusive<Idx> {
     /// The lower bound of the range
     pub start: Idx,
 
@@ -41,7 +41,7 @@ impl<Idx> From<ops::RangeInclusive<Idx>> for ContinuousRangeInclusive<Idx> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeExclusive<Idx> {
+pub struct ContinuousRangeExclusive<Idx> {
     /// The lower bound of the range
     pub start: Idx,
 
@@ -71,7 +71,7 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeExclusive<Idx> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeEndExclusive<Idx> {
+pub struct ContinuousRangeEndExclusive<Idx> {
     /// The lower bound of the range
     pub start: Idx,
 
@@ -107,7 +107,7 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeEndExclusive<Idx> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeStartExclusive<Idx> {
+pub struct ContinuousRangeStartExclusive<Idx> {
     /// The lower bound of the range
     pub start: Idx,
 
@@ -138,7 +138,7 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeStartExclusive<Idx> {
 
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeFromInclusive<Idx> {
+pub struct ContinuousRangeFromInclusive<Idx> {
     /// The lower bound of the range
     pub start: Idx,
 }
@@ -169,7 +169,7 @@ impl<Idx> From<ops::RangeFrom<Idx>> for ContinuousRangeFromInclusive<Idx> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeFromExclusive<Idx> {
+pub struct ContinuousRangeFromExclusive<Idx> {
     /// The lower bound of the range
     pub start: Idx,
 }
@@ -194,7 +194,7 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeFromExclusive<Idx> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeToInclusive<Idx> {
+pub struct ContinuousRangeToInclusive<Idx> {
     /// The upper bound of the range
     pub end: Idx,
 }
@@ -225,7 +225,7 @@ impl<Idx> From<ops::RangeTo<Idx>> for ContinuousRangeToInclusive<Idx> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct ContinuousRangeToExclusive<Idx> {
+pub struct ContinuousRangeToExclusive<Idx> {
     /// The upper bound of the range
     pub end: Idx,
 }
@@ -253,7 +253,7 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeToExclusive<Idx> {
 // Any range type
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-enum Range<Idx> {
+pub enum Range<Idx> {
     /// A range containing no value
     ///
     /// `[]`
@@ -366,11 +366,6 @@ impl<Idx: fmt::Debug> fmt::Debug for Range<Idx> {
         }
         Ok(())
     }
-}
-
-fn main() {
-    let r = Range::<i32>::Empty;
-    println!("Hello, world! {:?}", r);
 }
 
 #[cfg(test)]
