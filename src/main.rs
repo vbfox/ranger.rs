@@ -1,4 +1,4 @@
-use std::{fmt, ops::{Bound, RangeBounds}};
+use std::{fmt, ops::{self, Bound, RangeBounds}};
 
 // --------------------------------------------------------------------------------------------------------------------
 // Range types
@@ -23,7 +23,7 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeInclusive<Idx> {
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeInclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeInclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Included(&self.start)
     }
@@ -33,8 +33,8 @@ impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeInclusive<Idx> {
     }
 }
 
-impl<Idx> From<std::ops::RangeInclusive<Idx>> for ContinuousRangeInclusive<Idx> {
-    fn from(r: std::ops::RangeInclusive<Idx>) -> Self {
+impl<Idx> From<ops::RangeInclusive<Idx>> for ContinuousRangeInclusive<Idx> {
+    fn from(r: ops::RangeInclusive<Idx>) -> Self {
         let (start, end) = r.into_inner();
         ContinuousRangeInclusive { start, end }
     }
@@ -60,7 +60,7 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeExclusive<Idx> {
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeExclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeExclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Excluded(&self.start)
     }
@@ -90,13 +90,13 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeEndExclusive<Idx> {
     }
 }
 
-impl<Idx> From<std::ops::Range<Idx>> for ContinuousRangeEndExclusive<Idx> {
-    fn from(r: std::ops::Range<Idx>) -> Self {
+impl<Idx> From<ops::Range<Idx>> for ContinuousRangeEndExclusive<Idx> {
+    fn from(r: ops::Range<Idx>) -> Self {
         ContinuousRangeEndExclusive { start: r.start, end: r.end }
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeEndExclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeEndExclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Included(&self.start)
     }
@@ -126,7 +126,7 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeStartExclusive<Idx> {
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeStartExclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeStartExclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Excluded(&self.start)
     }
@@ -152,7 +152,7 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeFromInclusive<Idx> {
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeFromInclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeFromInclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Included(&self.start)
     }
@@ -162,6 +162,11 @@ impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeFromInclusive<Idx> {
     }
 }
 
+impl<Idx> From<ops::RangeFrom<Idx>> for ContinuousRangeFromInclusive<Idx> {
+    fn from(r: ops::RangeFrom<Idx>) -> Self {
+        ContinuousRangeFromInclusive { start: r.start }
+    }
+}
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct ContinuousRangeFromExclusive<Idx> {
@@ -178,7 +183,7 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeFromExclusive<Idx> {
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeFromExclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeFromExclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Excluded(&self.start)
     }
@@ -203,13 +208,19 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeToInclusive<Idx> {
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeToInclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeToInclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Unbounded
     }
 
     fn end_bound(&self) -> Bound<&Idx> {
         Bound::Included(&self.end)
+    }
+}
+
+impl<Idx> From<ops::RangeTo<Idx>> for ContinuousRangeToInclusive<Idx> {
+    fn from(r: ops::RangeTo<Idx>) -> Self {
+        ContinuousRangeToInclusive { end: r.end }
     }
 }
 
@@ -228,7 +239,7 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeToExclusive<Idx> {
     }
 }
 
-impl<Idx> std::ops::RangeBounds<Idx> for ContinuousRangeToExclusive<Idx> {
+impl<Idx> RangeBounds<Idx> for ContinuousRangeToExclusive<Idx> {
     fn start_bound(&self) -> Bound<&Idx> {
         Bound::Unbounded
     }
@@ -309,21 +320,33 @@ impl<Idx> Range<Idx> {
     }
 }
 
-impl<Idx> From<std::ops::RangeFull> for Range<Idx> {
-    fn from(_: std::ops::RangeFull) -> Self {
+impl<Idx> From<ops::RangeFull> for Range<Idx> {
+    fn from(_: ops::RangeFull) -> Self {
         Self::Full
     }
 }
 
-impl<Idx> From<std::ops::RangeInclusive<Idx>> for Range<Idx> {
-    fn from(r: std::ops::RangeInclusive<Idx>) -> Self {
+impl<Idx> From<ops::Range<Idx>> for Range<Idx> {
+    fn from(r: ops::Range<Idx>) -> Self {
+        Self::ContinuousEndExclusive(r.into())
+    }
+}
+
+impl<Idx> From<ops::RangeInclusive<Idx>> for Range<Idx> {
+    fn from(r: ops::RangeInclusive<Idx>) -> Self {
         Self::Continuous(r.into())
     }
 }
 
-impl<Idx> From<std::ops::Range<Idx>> for Range<Idx> {
-    fn from(r: std::ops::Range<Idx>) -> Self {
-        Self::ContinuousEndExclusive(r.into())
+impl<Idx> From<ops::RangeFrom<Idx>> for Range<Idx> {
+    fn from(r: ops::RangeFrom<Idx>) -> Self {
+        Self::From(r.into())
+    }
+}
+
+impl<Idx> From<ops::RangeTo<Idx>> for Range<Idx> {
+    fn from(r: ops::RangeTo<Idx>) -> Self {
+        Self::To(r.into())
     }
 }
 
@@ -340,8 +363,6 @@ impl<Idx: fmt::Debug> fmt::Debug for Range<Idx> {
             Range::FromExclusive(r) => fmt::Debug::fmt(r, fmt)?,
             Range::To(r) => fmt::Debug::fmt(r, fmt)?,
             Range::ToExclusive(r) => fmt::Debug::fmt(r, fmt)?,
-
-
         }
         Ok(())
     }
@@ -372,5 +393,17 @@ mod tests {
     pub fn c() {
         let r: Range<u32> = (..).into();
         assert_eq!(format!("{:?}", r), "(..)");
+    }
+
+    #[test]
+    pub fn d() {
+        let r: Range<u32> = (1..).into();
+        assert_eq!(format!("{:?}", r), "[1..)");
+    }
+
+    #[test]
+    pub fn e() {
+        let r: Range<u32> = (..5).into();
+        assert_eq!(format!("{:?}", r), "(..5]");
     }
 }
