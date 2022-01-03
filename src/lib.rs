@@ -1,4 +1,8 @@
-use std::{borrow::Borrow, fmt, ops::{self, Bound, RangeBounds}};
+use std::{
+    borrow::Borrow,
+    fmt,
+    ops::{self, Bound, RangeBounds},
+};
 
 // --------------------------------------------------------------------------------------------------------------------
 // Range types
@@ -92,7 +96,10 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeEndExclusive<Idx> {
 
 impl<Idx> From<ops::Range<Idx>> for ContinuousRangeEndExclusive<Idx> {
     fn from(r: ops::Range<Idx>) -> Self {
-        ContinuousRangeEndExclusive { start: r.start, end: r.end }
+        ContinuousRangeEndExclusive {
+            start: r.start,
+            end: r.end,
+        }
     }
 }
 
@@ -135,7 +142,6 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeStartExclusive<Idx> {
         Bound::Included(&self.end)
     }
 }
-
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct ContinuousRangeFromInclusive<Idx> {
@@ -232,7 +238,7 @@ pub struct ContinuousRangeToExclusive<Idx> {
 
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeToExclusive<Idx> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(fmt, "(-∞..")?;
+        write!(fmt, "(..")?;
         self.end.fmt(fmt)?;
         write!(fmt, ")")?;
         Ok(())
@@ -297,10 +303,12 @@ pub enum Range<Idx> {
     /// A range ending with `end` (exclusive)
     ///
     /// `(..end)`
-    ToExclusive(ContinuousRangeToInclusive<Idx>),
+    ToExclusive(ContinuousRangeToExclusive<Idx>),
 
     /// A range containing all values
     Full,
+
+    Composite(Vec<Range<Idx>>),
 }
 
 impl<Idx> Range<Idx> {
@@ -364,7 +372,7 @@ impl<Idx> Range<Idx> {
     ///
     /// `(..end)`
     pub fn to_exclusive(end: Idx) -> Range<Idx> {
-        Range::ToExclusive(ContinuousRangeToInclusive { end })
+        Range::ToExclusive(ContinuousRangeToExclusive { end })
     }
 
     /// A range containing all values
@@ -372,35 +380,75 @@ impl<Idx> Range<Idx> {
         Range::Full
     }
 
+    pub fn composite(items: Vec<Range<Idx>>) -> Range<Idx> {
+        Range::Composite(items)
+    }
+
     pub fn range_bounds(&self) -> Option<(Bound<&Idx>, Bound<&Idx>)> {
         match self {
-            Range::Empty => None,
-            Range::Continuous(r) => Some((r.start_bound(), r.end_bound())),
-            Range::ContinuousExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Range::ContinuousStartExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Range::ContinuousEndExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Range::From(r) => Some((r.start_bound(), r.end_bound())),
-            Range::FromExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Range::To(r) => Some((r.start_bound(), r.end_bound())),
-            Range::ToExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Range::Full => Some((Bound::Unbounded, Bound::Unbounded)),
+            Self::Empty => {
+                // We can't implement RangeBounds due to this case, a possible trick would be to use a range with 2
+                // exclusive bounds on the default value.
+                // But as the result is a reference we would need a per-generic 'static to reference and so would
+                // require something like the 'typemap' crate just for that.
+                None
+            },
+            Self::Continuous(r) => Some((r.start_bound(), r.end_bound())),
+            Self::ContinuousExclusive(r) => Some((r.start_bound(), r.end_bound())),
+            Self::ContinuousStartExclusive(r) => Some((r.start_bound(), r.end_bound())),
+            Self::ContinuousEndExclusive(r) => Some((r.start_bound(), r.end_bound())),
+            Self::From(r) => Some((r.start_bound(), r.end_bound())),
+            Self::FromExclusive(r) => Some((r.start_bound(), r.end_bound())),
+            Self::To(r) => Some((r.start_bound(), r.end_bound())),
+            Self::ToExclusive(r) => Some((r.start_bound(), r.end_bound())),
+            Self::Full => Some((Bound::Unbounded, Bound::Unbounded)),
+            Self::Composite(_) => None, // TODO: custom implementation of bounds
         }
     }
 
     pub fn contains(&self, value: impl Borrow<Idx>) -> bool
-    where Idx : PartialOrd
+    where
+        Idx: PartialOrd,
     {
         match self {
-            Range::Empty => false,
-            Range::Continuous(r) => r.contains(value.borrow()),
-            Range::ContinuousExclusive(r) => r.contains(value.borrow()),
-            Range::ContinuousStartExclusive(r) => r.contains(value.borrow()),
-            Range::ContinuousEndExclusive(r) => r.contains(value.borrow()),
-            Range::From(r) => r.contains(value.borrow()),
-            Range::FromExclusive(r) => r.contains(value.borrow()),
-            Range::To(r) => r.contains(value.borrow()),
-            Range::ToExclusive(r) => r.contains(value.borrow()),
-            Range::Full => true
+            Self::Empty => false,
+            Self::Continuous(r) => r.contains(value.borrow()),
+            Self::ContinuousExclusive(r) => r.contains(value.borrow()),
+            Self::ContinuousStartExclusive(r) => r.contains(value.borrow()),
+            Self::ContinuousEndExclusive(r) => r.contains(value.borrow()),
+            Self::From(r) => r.contains(value.borrow()),
+            Self::FromExclusive(r) => r.contains(value.borrow()),
+            Self::To(r) => r.contains(value.borrow()),
+            Self::ToExclusive(r) => r.contains(value.borrow()),
+            Self::Full => true,
+            Self::Composite(r) => {
+                let value = value.borrow();
+                r.iter().any(|x| x.contains(value))
+            }
+        }
+    }
+
+    pub fn union(self, other: Range<Idx>) -> Range<Idx> {
+        // TODO: Quite a few cases can be optimized, specialized, ...
+        // TODO: Also maybe the ranges should be kept sorted in composite
+        match (self, other) {
+            (Range::Empty, r) => r,
+            (r, Range::Empty) => r,
+            (Range::Full, _) => Range::Full,
+            (_, Range::Full) => Range::Full,
+            (Range::Composite(mut r1), Range::Composite(mut r2)) => {
+                r1.append(&mut r2);
+                Range::Composite(r1)
+            }
+            (Range::Composite(mut r1), r2) => {
+                r1.push(r2);
+                Range::Composite(r1)
+            }
+            (r1, Range::Composite(mut r2)) => {
+                r2.push(r1);
+                Range::Composite(r2)
+            }
+            (r1, r2) => Range::Composite(vec![r1, r2]),
         }
     }
 }
@@ -448,6 +496,20 @@ impl<Idx: fmt::Debug> fmt::Debug for Range<Idx> {
             Range::FromExclusive(r) => fmt::Debug::fmt(r, fmt)?,
             Range::To(r) => fmt::Debug::fmt(r, fmt)?,
             Range::ToExclusive(r) => fmt::Debug::fmt(r, fmt)?,
+            Range::Composite(r) => {
+                write!(fmt, "{{")?;
+                let mut first = true;
+                for child in r.iter() {
+                    if first {
+                        first = false;
+                    } else {
+                        write!(fmt, "; ")?;
+                    }
+
+                    fmt::Debug::fmt(child, fmt)?;
+                }
+                write!(fmt, "}}")?;
+            }
         }
         Ok(())
     }
@@ -458,33 +520,63 @@ mod test_fmt_debug {
     use crate::Range;
 
     #[test]
-    pub fn a() {
-        let r: Range<_> = (1..5).into();
-        assert_eq!(format!("{:?}", r), "[1..5)");
+    pub fn empty() {
+        let r = Range::<i32>::empty();
+        assert_eq!(format!("{:?}", r), "[]");
     }
 
     #[test]
-    pub fn b() {
+    pub fn continuous() {
         let r: Range<_> = (1..=5).into();
         assert_eq!(format!("{:?}", r), "[1..5]");
     }
 
     #[test]
-    pub fn c() {
+    pub fn continuous_exclusive() {
+        let r: Range<_> = Range::continuous_exclusive(1, 5);
+        assert_eq!(format!("{:?}", r), "(1..5)");
+    }
+
+    #[test]
+    pub fn continuous_start_exclusive() {
+        let r: Range<_> = Range::continuous_start_exclusive(1, 5);
+        assert_eq!(format!("{:?}", r), "(1..5]");
+    }
+
+    #[test]
+    pub fn continuous_end_exclusive() {
+        let r: Range<_> = (1..5).into();
+        assert_eq!(format!("{:?}", r), "[1..5)");
+    }
+
+    #[test]
+    pub fn full() {
         let r: Range<u32> = (..).into();
         assert_eq!(format!("{:?}", r), "(..)");
     }
 
     #[test]
-    pub fn d() {
-        let r: Range<u32> = (1..).into();
+    pub fn from() {
+        let r: Range<_> = (1..).into();
         assert_eq!(format!("{:?}", r), "[1..)");
     }
 
     #[test]
-    pub fn e() {
-        let r: Range<u32> = (..5).into();
+    pub fn from_exclusive() {
+        let r: Range<_> = Range::from_exclusive(1);
+        assert_eq!(format!("{:?}", r), "(1..)");
+    }
+
+    #[test]
+    pub fn to() {
+        let r: Range<_> = (..5).into();
         assert_eq!(format!("{:?}", r), "(..5]");
+    }
+
+    #[test]
+    pub fn to_exclusive() {
+        let r: Range<_> = Range::to_exclusive(5);
+        assert_eq!(format!("{:?}", r), "(..5)");
     }
 }
 
