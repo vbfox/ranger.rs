@@ -1,7 +1,9 @@
 [package]
 name = "range_ranger"
 version = "0.1.0"
+authors = ["Julien Roncaglia <julien@roncaglia.fr>"]
 edition = "2018"
+rust-version = "1.38"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
