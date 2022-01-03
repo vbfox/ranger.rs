@@ -598,13 +598,16 @@ mod test_fmt_debug {
 mod test_contains {
     use crate::Range;
 
+    // i32::MAX didn't exist in our MSRV version
+    pub const MAX_I32: i32 = 2_147_483_647i32;
+
     #[test]
     pub fn empty() {
         let r: Range<i32> = Range::Empty;
         assert_eq!(r.contains(-500), false);
         assert_eq!(r.contains(0), false);
         assert_eq!(r.contains(42), false);
-        assert_eq!(r.contains(i32::MAX), false);
+        assert_eq!(r.contains(MAX_I32), false);
     }
 
     #[test]
@@ -653,6 +656,6 @@ mod test_contains {
         assert_eq!(r.contains(-500), true);
         assert_eq!(r.contains(0), true);
         assert_eq!(r.contains(42), true);
-        assert_eq!(r.contains(i32::MAX), true);
+        assert_eq!(r.contains(MAX_I32), true);
     }
 }
