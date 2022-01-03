@@ -1,3 +1,5 @@
+#![allow(clippy::bool_assert_comparison)]
+
 use std::{
     borrow::Borrow,
     fmt,
@@ -315,6 +317,7 @@ impl<Idx> Range<Idx> {
     /// A range containing no value
     ///
     /// `[]`
+    #[must_use]
     pub fn empty() -> Range<Idx> {
         Range::Empty
     }
@@ -322,6 +325,7 @@ impl<Idx> Range<Idx> {
     /// A range between `start` (inclusive) and `end` (inclusive)
     ///
     /// `[start..end]`
+    #[must_use]
     pub fn continuous(start: Idx, end: Idx) -> Range<Idx> {
         Range::Continuous(ContinuousRangeInclusive { start, end })
     }
@@ -329,6 +333,7 @@ impl<Idx> Range<Idx> {
     /// A range between `start` (exclusive) and `end` (exclusive)
     ///
     /// `(start..end)`
+    #[must_use]
     pub fn continuous_exclusive(start: Idx, end: Idx) -> Range<Idx> {
         Range::ContinuousExclusive(ContinuousRangeExclusive { start, end })
     }
@@ -336,6 +341,7 @@ impl<Idx> Range<Idx> {
     /// A range between `start` (exclusive) and `end` (inclusive)
     ///
     /// `(start..end]`
+    #[must_use]
     pub fn continuous_start_exclusive(start: Idx, end: Idx) -> Range<Idx> {
         Range::ContinuousStartExclusive(ContinuousRangeStartExclusive { start, end })
     }
@@ -343,6 +349,7 @@ impl<Idx> Range<Idx> {
     /// A range between `start` (inclusive) and `end` (exclusive)
     ///
     /// `[start..end)`
+    #[must_use]
     pub fn continuous_end_exclusive(start: Idx, end: Idx) -> Range<Idx> {
         Range::ContinuousEndExclusive(ContinuousRangeEndExclusive { start, end })
     }
@@ -350,6 +357,7 @@ impl<Idx> Range<Idx> {
     /// A range starting from `start` (inclusive)
     ///
     /// `[start..)`
+    #[must_use]
     pub fn from(start: Idx) -> Range<Idx> {
         Range::From(ContinuousRangeFromInclusive { start })
     }
@@ -357,6 +365,7 @@ impl<Idx> Range<Idx> {
     /// A range starting from `start` (exclusive)
     ///
     /// `(start..)`
+    #[must_use]
     pub fn from_exclusive(start: Idx) -> Range<Idx> {
         Range::FromExclusive(ContinuousRangeFromExclusive { start })
     }
@@ -364,6 +373,7 @@ impl<Idx> Range<Idx> {
     /// A range ending with `end` (inclusive)
     ///
     /// `(..end]`
+    #[must_use]
     pub fn to(end: Idx) -> Range<Idx> {
         Range::To(ContinuousRangeToInclusive { end })
     }
@@ -371,19 +381,23 @@ impl<Idx> Range<Idx> {
     /// A range ending with `end` (exclusive)
     ///
     /// `(..end)`
+    #[must_use]
     pub fn to_exclusive(end: Idx) -> Range<Idx> {
         Range::ToExclusive(ContinuousRangeToExclusive { end })
     }
 
     /// A range containing all values
+    #[must_use]
     pub fn full() -> Range<Idx> {
         Range::Full
     }
 
+    #[must_use]
     pub fn composite(items: Vec<Range<Idx>>) -> Range<Idx> {
         Range::Composite(items)
     }
 
+    #[must_use]
     pub fn range_bounds(&self) -> Option<(Bound<&Idx>, Bound<&Idx>)> {
         match self {
             Self::Empty => {
@@ -392,7 +406,7 @@ impl<Idx> Range<Idx> {
                 // But as the result is a reference we would need a per-generic 'static to reference and so would
                 // require something like the 'typemap' crate just for that.
                 None
-            },
+            }
             Self::Continuous(r) => Some((r.start_bound(), r.end_bound())),
             Self::ContinuousExclusive(r) => Some((r.start_bound(), r.end_bound())),
             Self::ContinuousStartExclusive(r) => Some((r.start_bound(), r.end_bound())),
@@ -406,6 +420,7 @@ impl<Idx> Range<Idx> {
         }
     }
 
+    #[must_use]
     pub fn contains(&self, value: impl Borrow<Idx>) -> bool
     where
         Idx: PartialOrd,
@@ -428,14 +443,13 @@ impl<Idx> Range<Idx> {
         }
     }
 
+    #[must_use]
     pub fn union(self, other: Range<Idx>) -> Range<Idx> {
         // TODO: Quite a few cases can be optimized, specialized, ...
         // TODO: Also maybe the ranges should be kept sorted in composite
         match (self, other) {
-            (Range::Empty, r) => r,
-            (r, Range::Empty) => r,
-            (Range::Full, _) => Range::Full,
-            (_, Range::Full) => Range::Full,
+            (Range::Empty, r) | (r, Range::Empty) => r,
+            (Range::Full, _) | (_, Range::Full) => Range::Full,
             (Range::Composite(mut r1), Range::Composite(mut r2)) => {
                 r1.append(&mut r2);
                 Range::Composite(r1)
