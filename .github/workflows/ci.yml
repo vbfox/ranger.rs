@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: [nightly, stable]
+        rust: [nightly, stable, 1.36.0]
     steps:
       - uses: actions/checkout@v2
       - uses: dtolnay/rust-toolchain@master
@@ -38,4 +38,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: dtolnay/rust-toolchain@clippy
-      - run: cargo clippy --tests --benches -- -Dclippy::all -Dclippy::pedantic
+      - run: cargo clippy --all-targets --all-features --tests --benches -- -Dclippy::all -Dclippy::pedantic
