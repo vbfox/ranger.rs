@@ -60,6 +60,24 @@ mod test_fmt_debug {
         let r: Range<_> = (..5).into();
         assert_eq!(format!("{:?}", r), "(..5)");
     }
+
+    #[test]
+    pub fn composite_empty() {
+        let r: Range<u32> = Range::composite(vec![]);
+        assert_eq!(format!("{:?}", r), "{}");
+    }
+
+    #[test]
+    pub fn composite_simple() {
+        let r: Range<_> = Range::composite(vec![(1..=5).into()]);
+        assert_eq!(format!("{:?}", r), "{[1..5]}");
+    }
+
+    #[test]
+    pub fn composite_complex() {
+        let r: Range<_> = Range::composite(vec![(1..3).into(), (5..).into()]);
+        assert_eq!(format!("{:?}", r), "{[1..3); [5..)}");
+    }
 }
 
 mod test_contains {
@@ -165,6 +183,37 @@ mod test_contains {
         assert_eq!(r.contains(42), true);
         assert_eq!(r.contains(MAX_I32), true);
     }
+
+    #[test]
+    pub fn composite_empty() {
+        let r: Range<u32> = Range::composite(vec![]);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), false);
+        assert_eq!(r.contains(3), false);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn composite_simple() {
+        let r: Range<_> = Range::composite(vec![(1..=5).into()]);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), true);
+        assert_eq!(r.contains(3), true);
+        assert_eq!(r.contains(5), true);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn composite_complex() {
+        let r: Range<_> = Range::composite(vec![(1..3).into(), (5..).into()]);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), true);
+        assert_eq!(r.contains(3), false);
+        assert_eq!(r.contains(5), true);
+        assert_eq!(r.contains(42), true);
+        assert_eq!(r.contains(MAX_I32), true);
+    }
 }
 
 mod test_is_empty {
@@ -228,5 +277,35 @@ mod test_is_empty {
     pub fn full() {
         let r: Range<i32> = Range::Full;
         assert_eq!(r.is_empty(), false);
+    }
+
+    #[test]
+    pub fn composite_empty() {
+        let r: Range<u32> = Range::composite(vec![]);
+        assert_eq!(r.is_empty(), true);
+    }
+
+    #[test]
+    pub fn composite_simple() {
+        let r: Range<_> = Range::composite(vec![(1..=5).into()]);
+        assert_eq!(r.is_empty(), false);
+    }
+
+    #[test]
+    pub fn composite_simple_empty() {
+        let r: Range<u32> = Range::composite(vec![Range::empty()]);
+        assert_eq!(r.is_empty(), true);
+    }
+
+    #[test]
+    pub fn composite_complex() {
+        let r: Range<_> = Range::composite(vec![(1..3).into(), (5..).into()]);
+        assert_eq!(r.is_empty(), false);
+    }
+
+    #[test]
+    pub fn composite_complex_empty() {
+        let r: Range<u32> = Range::composite(vec![Range::empty(),Range::empty(),Range::empty()]);
+        assert_eq!(r.is_empty(), true);
     }
 }
