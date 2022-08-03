@@ -10,6 +10,7 @@ pub use crate::{
     ContinuousRangeToExclusive, ContinuousRangeToInclusive,
 };
 
+#[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Range<Idx> {
     /// A range containing no value
@@ -76,32 +77,60 @@ impl<Idx> Range<Idx> {
     ///
     /// `[start..end]`
     #[must_use]
-    pub fn continuous(start: Idx, end: Idx) -> Range<Idx> {
-        Range::Continuous(ContinuousRangeInclusive { start, end })
+    pub fn continuous(start: Idx, end: Idx) -> Range<Idx>
+    where
+        Idx: PartialOrd,
+    {
+        if start > end {
+            Range::Empty
+        } else {
+            Range::Continuous(ContinuousRangeInclusive { start, end })
+        }
     }
 
     /// A range between `start` (exclusive) and `end` (exclusive)
     ///
     /// `(start..end)`
     #[must_use]
-    pub fn continuous_exclusive(start: Idx, end: Idx) -> Range<Idx> {
-        Range::ContinuousExclusive(ContinuousRangeExclusive { start, end })
+    pub fn continuous_exclusive(start: Idx, end: Idx) -> Range<Idx>
+    where
+        Idx: PartialOrd,
+    {
+        if start >= end {
+            Range::Empty
+        } else {
+            Range::ContinuousExclusive(ContinuousRangeExclusive { start, end })
+        }
     }
 
     /// A range between `start` (exclusive) and `end` (inclusive)
     ///
     /// `(start..end]`
     #[must_use]
-    pub fn continuous_start_exclusive(start: Idx, end: Idx) -> Range<Idx> {
-        Range::ContinuousStartExclusive(ContinuousRangeStartExclusive { start, end })
+    pub fn continuous_start_exclusive(start: Idx, end: Idx) -> Range<Idx>
+    where
+        Idx: PartialOrd,
+    {
+        if start >= end {
+            Range::Empty
+        } else {
+            Range::ContinuousStartExclusive(ContinuousRangeStartExclusive { start, end })
+        }
     }
 
     /// A range between `start` (inclusive) and `end` (exclusive)
     ///
     /// `[start..end)`
     #[must_use]
-    pub fn continuous_end_exclusive(start: Idx, end: Idx) -> Range<Idx> {
-        Range::ContinuousEndExclusive(ContinuousRangeEndExclusive { start, end })
+    pub fn continuous_end_exclusive(start: Idx, end: Idx) -> Range<Idx>
+    where
+        Idx: PartialOrd,
+    {
+        if start >= end {
+            Range::Empty
+        } else {
+            Range::ContinuousEndExclusive(ContinuousRangeEndExclusive { start, end })
+        }
     }
 
     /// A range starting from `start` (inclusive)
@@ -143,8 +172,36 @@ impl<Idx> Range<Idx> {
     }
 
     #[must_use]
-    pub fn composite(items: Vec<Range<Idx>>) -> Range<Idx> {
-        Range::Composite(items)
+    pub fn composite(items: Vec<Range<Idx>>) -> Range<Idx>
+    where
+        Idx: PartialOrd,
+    {
+        match items.len() {
+            0 => Range::Empty,
+            1 => items.into_iter().next().unwrap(),
+            _ => {
+                let mut new_items = vec![];
+
+                for item in items.into_iter() {
+                    match item {
+                        Range::Empty => continue,
+                        Range::Full => {
+                            return Range::Full;
+                        }
+                        Range::Composite(sub_items) => {
+                            new_items.extend(sub_items);
+                        }
+                        _ => new_items.push(item),
+                    }
+                }
+
+                match new_items.len() {
+                    0 => Range::Empty,
+                    1 => new_items.into_iter().next().unwrap(),
+                    _ => Range::Composite(new_items),
+                }
+            }
+        }
     }
 
     #[must_use]
@@ -194,88 +251,70 @@ impl<Idx> Range<Idx> {
     }
 
     #[must_use]
-    pub fn union(self, other: Range<Idx>) -> Range<Idx> {
+    pub fn union(self, other: Range<Idx>) -> Range<Idx>
+    where
+        Idx: PartialOrd,
+    {
         // TODO: Quite a few cases can be optimized, specialized, ...
         // TODO: Also maybe the ranges should be kept sorted in composite
         match (self, other) {
             (Range::Empty, r) | (r, Range::Empty) => r,
             (Range::Full, _) | (_, Range::Full) => Range::Full,
-            (Range::Composite(mut r1), Range::Composite(mut r2)) => {
-                r1.append(&mut r2);
-                Range::Composite(r1)
-            }
-            (Range::Composite(mut r1), r2) => {
-                r1.push(r2);
-                Range::Composite(r1)
-            }
-            (r1, Range::Composite(mut r2)) => {
-                r2.push(r1);
-                Range::Composite(r2)
-            }
-            (r1, r2) => Range::Composite(vec![r1, r2]),
+            (r1, r2) => Range::composite(vec![r1, r2]),
         }
     }
 
     #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
+    pub fn is_empty(&self) -> bool {
         match self {
             Self::Empty => true,
-            Self::Continuous(r) => r.is_empty(),
-            Self::ContinuousExclusive(r) => r.is_empty(),
-            Self::ContinuousStartExclusive(r) => r.is_empty(),
-            Self::ContinuousEndExclusive(r) => r.is_empty(),
-            Self::From(_) => false,
-            Self::FromExclusive(_) => false,
-            Self::To(_) => false,
-            Self::ToExclusive(_) => false,
-            Self::Full => false,
-            Self::Composite(r) => {
-                if r.len() == 0 {
-                    true
-                } else {
-                    r.iter().all(|x| x.is_empty())
-                }
-            }
+            _ => false,
+        }
+    }
+
+    #[must_use]
+    pub fn is_full(&self) -> bool {
+        match self {
+            Self::Full => true,
+            _ => false,
         }
     }
 }
 
 impl<Idx> From<ops::RangeFull> for Range<Idx> {
     fn from(_: ops::RangeFull) -> Self {
-        Self::Full
+        Self::full()
     }
 }
 
-impl<Idx> From<ops::Range<Idx>> for Range<Idx> {
+impl<Idx: PartialOrd> From<ops::Range<Idx>> for Range<Idx> {
     fn from(r: ops::Range<Idx>) -> Self {
-        Self::ContinuousEndExclusive(r.into())
+        Self::continuous_end_exclusive(r.start, r.end)
     }
 }
 
-impl<Idx> From<ops::RangeInclusive<Idx>> for Range<Idx> {
+impl<Idx: PartialOrd> From<ops::RangeInclusive<Idx>> for Range<Idx> {
     fn from(r: ops::RangeInclusive<Idx>) -> Self {
-        Self::Continuous(r.into())
+        let (start, end) = r.into_inner();
+        Self::continuous(start, end)
     }
 }
 
 impl<Idx> From<ops::RangeFrom<Idx>> for Range<Idx> {
     fn from(r: ops::RangeFrom<Idx>) -> Self {
-        Self::From(r.into())
+        Self::from(r.start)
     }
 }
 
 impl<Idx> From<ops::RangeToInclusive<Idx>> for Range<Idx> {
     fn from(r: ops::RangeToInclusive<Idx>) -> Self {
-        Self::To(r.into())
+        Self::to(r.end)
     }
 }
 
 impl<Idx> From<ops::RangeTo<Idx>> for Range<Idx> {
     fn from(r: ops::RangeTo<Idx>) -> Self {
-        Self::ToExclusive(r.into())
+        Self::to_exclusive(r.end)
     }
 }
 

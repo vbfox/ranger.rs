@@ -59,16 +59,6 @@ pub struct ContinuousRangeExclusive<Idx> {
     pub end: Idx,
 }
 
-impl<Idx> ContinuousRangeExclusive<Idx> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
-        self.start >= self.end
-    }
-}
-
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeExclusive<Idx> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "(")?;
@@ -97,16 +87,6 @@ pub struct ContinuousRangeEndExclusive<Idx> {
 
     /// The upper bound of the range
     pub end: Idx,
-}
-
-impl<Idx> ContinuousRangeEndExclusive<Idx> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
-        self.start >= self.end
-    }
 }
 
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeEndExclusive<Idx> {
@@ -148,16 +128,6 @@ pub struct ContinuousRangeStartExclusive<Idx> {
     pub end: Idx,
 }
 
-impl<Idx> ContinuousRangeStartExclusive<Idx> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
-        self.start >= self.end
-    }
-}
-
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeStartExclusive<Idx> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "(")?;
@@ -183,16 +153,6 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeStartExclusive<Idx> {
 pub struct ContinuousRangeFromInclusive<Idx> {
     /// The lower bound of the range
     pub start: Idx,
-}
-
-impl<Idx> ContinuousRangeFromInclusive<Idx> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
-        false
-    }
 }
 
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeFromInclusive<Idx> {
@@ -226,16 +186,6 @@ pub struct ContinuousRangeFromExclusive<Idx> {
     pub start: Idx,
 }
 
-impl<Idx> ContinuousRangeFromExclusive<Idx> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
-        false
-    }
-}
-
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeFromExclusive<Idx> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "(")?;
@@ -259,16 +209,6 @@ impl<Idx> RangeBounds<Idx> for ContinuousRangeFromExclusive<Idx> {
 pub struct ContinuousRangeToInclusive<Idx> {
     /// The upper bound of the range
     pub end: Idx,
-}
-
-impl<Idx> ContinuousRangeToInclusive<Idx> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
-        false
-    }
 }
 
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeToInclusive<Idx> {
@@ -300,16 +240,6 @@ impl<Idx> From<ops::RangeToInclusive<Idx>> for ContinuousRangeToInclusive<Idx> {
 pub struct ContinuousRangeToExclusive<Idx> {
     /// The upper bound of the range
     pub end: Idx,
-}
-
-impl<Idx> ContinuousRangeToExclusive<Idx> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool
-    where
-        Idx: PartialOrd,
-    {
-        false
-    }
 }
 
 impl<Idx: fmt::Debug> fmt::Debug for ContinuousRangeToExclusive<Idx> {
