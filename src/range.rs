@@ -5,14 +5,9 @@ use std::{
 };
 
 pub use crate::{
-    ContinuousRangeInclusive,
-    ContinuousRangeExclusive,
-    ContinuousRangeStartExclusive,
-    ContinuousRangeEndExclusive,
-    ContinuousRangeFromInclusive,
-    ContinuousRangeFromExclusive,
-    ContinuousRangeToInclusive,
-    ContinuousRangeToExclusive
+    ContinuousRangeEndExclusive, ContinuousRangeExclusive, ContinuousRangeFromExclusive,
+    ContinuousRangeFromInclusive, ContinuousRangeInclusive, ContinuousRangeStartExclusive,
+    ContinuousRangeToExclusive, ContinuousRangeToInclusive,
 };
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -220,6 +215,32 @@ impl<Idx> Range<Idx> {
             (r1, r2) => Range::Composite(vec![r1, r2]),
         }
     }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool
+    where
+        Idx: PartialOrd,
+    {
+        match self {
+            Self::Empty => true,
+            Self::Continuous(r) => r.is_empty(),
+            Self::ContinuousExclusive(r) => r.is_empty(),
+            Self::ContinuousStartExclusive(r) => r.is_empty(),
+            Self::ContinuousEndExclusive(r) => r.is_empty(),
+            Self::From(_) => false,
+            Self::FromExclusive(_) => false,
+            Self::To(_) => false,
+            Self::ToExclusive(_) => false,
+            Self::Full => false,
+            Self::Composite(r) => {
+                if r.len() == 0 {
+                    true
+                } else {
+                    r.iter().all(|x| x.is_empty())
+                }
+            }
+        }
+    }
 }
 
 impl<Idx> From<ops::RangeFull> for Range<Idx> {
@@ -246,9 +267,15 @@ impl<Idx> From<ops::RangeFrom<Idx>> for Range<Idx> {
     }
 }
 
+impl<Idx> From<ops::RangeToInclusive<Idx>> for Range<Idx> {
+    fn from(r: ops::RangeToInclusive<Idx>) -> Self {
+        Self::To(r.into())
+    }
+}
+
 impl<Idx> From<ops::RangeTo<Idx>> for Range<Idx> {
     fn from(r: ops::RangeTo<Idx>) -> Self {
-        Self::To(r.into())
+        Self::ToExclusive(r.into())
     }
 }
 

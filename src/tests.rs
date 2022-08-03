@@ -51,13 +51,13 @@ mod test_fmt_debug {
 
     #[test]
     pub fn to() {
-        let r: Range<_> = (..5).into();
+        let r: Range<_> = (..=5).into();
         assert_eq!(format!("{:?}", r), "(..5]");
     }
 
     #[test]
     pub fn to_exclusive() {
-        let r: Range<_> = Range::to_exclusive(5);
+        let r: Range<_> = (..5).into();
         assert_eq!(format!("{:?}", r), "(..5)");
     }
 }
@@ -88,11 +88,31 @@ mod test_contains {
     }
 
     #[test]
+    pub fn continuous_inverted() {
+        let r: Range<_> = (5..=1).into();
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), false);
+        assert_eq!(r.contains(3), false);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
     pub fn continuous_exclusive() {
         let r: Range<_> = Range::continuous_exclusive(1, 5);
         assert_eq!(r.contains(0), false);
         assert_eq!(r.contains(1), false);
         assert_eq!(r.contains(3), true);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn continuous_exclusive_inverted() {
+        let r: Range<_> = Range::continuous_exclusive(5, 1);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), false);
+        assert_eq!(r.contains(3), false);
         assert_eq!(r.contains(5), false);
         assert_eq!(r.contains(42), false);
     }
@@ -108,11 +128,31 @@ mod test_contains {
     }
 
     #[test]
+    pub fn continuous_start_exclusive_inverted() {
+        let r: Range<_> = Range::continuous_start_exclusive(5, 1);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), false);
+        assert_eq!(r.contains(3), false);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
     pub fn continuous_end_exclusive() {
         let r: Range<_> = (1..5).into();
         assert_eq!(r.contains(0), false);
         assert_eq!(r.contains(1), true);
         assert_eq!(r.contains(3), true);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(42), false);
+    }
+
+    #[test]
+    pub fn continuous_end_exclusive_inverted() {
+        let r: Range<_> = (5..1).into();
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(1), false);
+        assert_eq!(r.contains(3), false);
         assert_eq!(r.contains(5), false);
         assert_eq!(r.contains(42), false);
     }
@@ -124,5 +164,69 @@ mod test_contains {
         assert_eq!(r.contains(0), true);
         assert_eq!(r.contains(42), true);
         assert_eq!(r.contains(MAX_I32), true);
+    }
+}
+
+mod test_is_empty {
+    use crate::Range;
+
+    #[test]
+    pub fn empty() {
+        let r: Range<i32> = Range::Empty;
+        assert_eq!(r.is_empty(), true);
+    }
+
+    #[test]
+    pub fn continuous() {
+        let r: Range<_> = (1..=5).into();
+        assert_eq!(r.is_empty(), false);
+    }
+
+    #[test]
+    pub fn continuous_inverted() {
+        let r: Range<_> = (5..=1).into();
+        assert_eq!(r.is_empty(), true);
+    }
+
+    #[test]
+    pub fn continuous_exclusive() {
+        let r: Range<_> = Range::continuous_exclusive(1, 5);
+        assert_eq!(r.is_empty(), false);
+    }
+
+    #[test]
+    pub fn continuous_exclusive_inverted() {
+        let r: Range<_> = Range::continuous_exclusive(5, 1);
+        assert_eq!(r.is_empty(), true);
+    }
+
+    #[test]
+    pub fn continuous_start_exclusive() {
+        let r: Range<_> = Range::continuous_start_exclusive(1, 5);
+        assert_eq!(r.is_empty(), false);
+    }
+
+    #[test]
+    pub fn continuous_start_exclusive_inverted() {
+        let r: Range<_> = Range::continuous_start_exclusive(5, 1);
+        assert_eq!(r.is_empty(), true);
+    }
+
+    #[test]
+    pub fn continuous_end_exclusive() {
+        let r: Range<_> = (1..5).into();
+        assert_eq!(r.is_empty(), false);
+    }
+
+    #[test]
+    pub fn continuous_end_exclusive_inverted() {
+        let r: Range<_> = (5..1).into();
+        assert_eq!(r.is_empty(), true);
+    }
+
+    #[test]
+    pub fn full() {
+        let r: Range<i32> = Range::Full;
+        assert_eq!(r.is_empty(), false);
     }
 }

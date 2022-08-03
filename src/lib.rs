@@ -3,14 +3,9 @@
 mod range_structs;
 
 pub use range_structs::{
-    ContinuousRangeInclusive,
-    ContinuousRangeExclusive,
-    ContinuousRangeStartExclusive,
-    ContinuousRangeEndExclusive,
-    ContinuousRangeFromInclusive,
-    ContinuousRangeFromExclusive,
-    ContinuousRangeToInclusive,
-    ContinuousRangeToExclusive
+    ContinuousRangeEndExclusive, ContinuousRangeExclusive, ContinuousRangeFromExclusive,
+    ContinuousRangeFromInclusive, ContinuousRangeInclusive, ContinuousRangeStartExclusive,
+    ContinuousRangeToExclusive, ContinuousRangeToInclusive,
 };
 
 mod range;
