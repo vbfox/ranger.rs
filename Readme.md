@@ -1,0 +1,23 @@
+# Range ranger
+
+**This library is a WORK IN PROGRESS experiment into rust APIs for me**
+
+Range ranger is a range manipulation library supporting multiple type of ranges under a single type:
+
+* Empty
+* Continuous (containing all values between min and max)
+  * Bounds can be inclusive or exclusive
+  * Bounds can be finite or infinite
+* Full ranges
+* List of values
+* Single value
+* Composite ranges (Union of multiple of theses)
+
+With support for the following operations:
+
+* Union
+* Intersection
+* Difference
+* Contains range
+* Contains value
+* Overlaps
