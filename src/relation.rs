@@ -108,3 +108,25 @@ pub enum RangesRelation {
     ////
     Equal,
 }
+
+impl RangesRelation {
+    pub fn intersects(&self) -> bool {
+        match self {
+            RangesRelation::None
+            | RangesRelation::StrictlyBefore
+            | RangesRelation::StrictlyAfter => false,
+
+            RangesRelation::Overlaps
+            | RangesRelation::IsOverlapped
+            | RangesRelation::Meets
+            | RangesRelation::IsMet
+            | RangesRelation::Starts
+            | RangesRelation::IsStarted
+            | RangesRelation::StrictlyContains
+            | RangesRelation::IsStrictlyContained
+            | RangesRelation::Finishes
+            | RangesRelation::IsFinished
+            | RangesRelation::Equal => true,
+        }
+    }
+}

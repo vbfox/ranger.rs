@@ -302,7 +302,19 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Empty => true,
-            _ => false,
+
+            // bounded ranges with inverted bounds are considered empty
+            Self::Inclusive(start, end) => start > end,
+            Self::Exclusive(start, end) => start >= end,
+            Self::StartExclusive(start, end) => start >= end,
+            Self::EndExclusive(start, end) => start >= end,
+
+            // unbounded ranges can't be empty
+            Self::From(_) => false,
+            Self::FromExclusive(_) => false,
+            Self::To(_) => false,
+            Self::ToExclusive(_) => false,
+            Self::Full => false,
         }
     }
 
