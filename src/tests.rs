@@ -3,7 +3,7 @@ mod test_fmt_debug {
 
     #[test]
     pub fn empty() {
-        let r = Range::<i32>::Empty;
+        let r = Range::<i32>::empty();
         assert_eq!(format!("{:?}", r), "[]");
     }
 
@@ -136,7 +136,7 @@ mod test_contains {
 
     #[test]
     pub fn empty() {
-        let r: Range<i32> = Range::Empty;
+        let r: Range<i32> = Range::empty();
         assert_eq!(r.contains(-500), false);
         assert_eq!(r.contains(0), false);
         assert_eq!(r.contains(42), false);
@@ -225,7 +225,7 @@ mod test_contains {
 
     #[test]
     pub fn full() {
-        let r: Range<i32> = Range::Full;
+        let r: Range<i32> = Range::full();
         assert_eq!(r.contains(-500), true);
         assert_eq!(r.contains(0), true);
         assert_eq!(r.contains(42), true);
@@ -269,7 +269,7 @@ mod test_is_empty {
 
     #[test]
     pub fn empty() {
-        let r: Range<i32> = Range::Empty;
+        let r: Range<i32> = Range::empty();
         assert_eq!(r.is_empty(), true);
     }
 
@@ -323,7 +323,7 @@ mod test_is_empty {
 
     #[test]
     pub fn full() {
-        let r: Range<i32> = Range::Full;
+        let r: Range<i32> = Range::full();
         assert_eq!(r.is_empty(), false);
     }
 
@@ -363,7 +363,7 @@ mod test_is_full {
 
     #[test]
     pub fn empty() {
-        let r: Range<i32> = Range::Empty;
+        let r: Range<i32> = Range::empty();
         assert_eq!(r.is_full(), false);
     }
 
@@ -417,7 +417,7 @@ mod test_is_full {
 
     #[test]
     pub fn full() {
-        let r: Range<i32> = Range::Full;
+        let r: Range<i32> = Range::full();
         assert_eq!(r.is_full(), true);
     }
 
@@ -453,30 +453,30 @@ mod test_is_full {
 }
 
 mod test_composite_simplification {
-    use crate::Range;
+    use crate::{ContinuousRange, Range};
     use assert_matches::assert_matches;
 
     #[test]
     pub fn empty_list() {
         let r: Range<i32> = Range::composite(vec![]);
-        assert_matches!(r, Range::Empty);
+        assert_matches!(r, Range::Continuous(ContinuousRange::Empty));
     }
 
     #[test]
     pub fn single_empty() {
         let r: Range<i32> = Range::composite(vec![Range::empty()]);
-        assert_matches!(r, Range::Empty);
+        assert_matches!(r, Range::Continuous(ContinuousRange::Empty));
     }
 
     #[test]
     pub fn multiple_empty() {
         let r: Range<i32> = Range::composite(vec![Range::empty(), Range::empty(), Range::empty()]);
-        assert_matches!(r, Range::Empty);
+        assert_matches!(r, Range::Continuous(ContinuousRange::Empty));
     }
 
     #[test]
     pub fn single_range() {
         let r: Range<i32> = Range::composite(vec![(1..=5).into()]);
-        assert_matches!(r, Range::Continuous(1, 5));
+        assert_matches!(r, Range::Continuous(ContinuousRange::Inclusive(1, 5)));
     }
 }
