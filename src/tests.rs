@@ -3,7 +3,7 @@ mod test_fmt_debug {
 
     #[test]
     pub fn empty() {
-        let r = Range::<i32>::empty();
+        let r = Range::<i32>::Empty;
         assert_eq!(format!("{:?}", r), "[]");
     }
 
@@ -453,7 +453,7 @@ mod test_is_full {
 }
 
 mod test_composite_simplification {
-    use crate::{Range, ContinuousRangeInclusive};
+    use crate::Range;
     use assert_matches::assert_matches;
 
     #[test]
@@ -477,6 +477,6 @@ mod test_composite_simplification {
     #[test]
     pub fn single_range() {
         let r: Range<i32> = Range::composite(vec![(1..=5).into()]);
-        assert_matches!(r, Range::Continuous(ContinuousRangeInclusive { start: 1, end: 5 }));
+        assert_matches!(r, Range::Continuous(1, 5));
     }
 }

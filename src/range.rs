@@ -1,13 +1,7 @@
 use std::{
     borrow::Borrow,
     fmt,
-    ops::{self, Bound, RangeBounds},
-};
-
-pub use crate::{
-    ContinuousRangeEndExclusive, ContinuousRangeExclusive, ContinuousRangeFromExclusive,
-    ContinuousRangeFromInclusive, ContinuousRangeInclusive, ContinuousRangeStartExclusive,
-    ContinuousRangeToExclusive, ContinuousRangeToInclusive,
+    ops::{self, Bound},
 };
 
 #[non_exhaustive]
@@ -21,42 +15,42 @@ pub enum Range<Idx> {
     /// A range between `start` (inclusive) and `end` (inclusive)
     ///
     /// `[start..end]`
-    Continuous(ContinuousRangeInclusive<Idx>),
+    Continuous(Idx, Idx),
 
     /// A range between `start` (exclusive) and `end` (exclusive)
     ///
     /// `(start..end)`
-    ContinuousExclusive(ContinuousRangeExclusive<Idx>),
+    ContinuousExclusive(Idx, Idx),
 
     /// A range between `start` (exclusive) and `end` (inclusive)
     ///
     /// `(start..end]`
-    ContinuousStartExclusive(ContinuousRangeStartExclusive<Idx>),
+    ContinuousStartExclusive(Idx, Idx),
 
     /// A range between `start` (inclusive) and `end` (exclusive)
     ///
     /// `[start..end)`
-    ContinuousEndExclusive(ContinuousRangeEndExclusive<Idx>),
+    ContinuousEndExclusive(Idx, Idx),
 
     /// A range starting from `start` (inclusive)
     ///
     /// `[start..)`
-    From(ContinuousRangeFromInclusive<Idx>),
+    From(Idx),
 
     /// A range starting from `start` (exclusive)
     ///
     /// `(start..)`
-    FromExclusive(ContinuousRangeFromExclusive<Idx>),
+    FromExclusive(Idx),
 
     /// A range ending with `end` (inclusive)
     ///
     /// `(..end]`
-    To(ContinuousRangeToInclusive<Idx>),
+    To(Idx),
 
     /// A range ending with `end` (exclusive)
     ///
     /// `(..end)`
-    ToExclusive(ContinuousRangeToExclusive<Idx>),
+    ToExclusive(Idx),
 
     /// A range containing all values
     Full,
@@ -84,7 +78,7 @@ impl<Idx> Range<Idx> {
         if start > end {
             Range::Empty
         } else {
-            Range::Continuous(ContinuousRangeInclusive { start, end })
+            Range::Continuous(start, end)
         }
     }
 
@@ -99,7 +93,7 @@ impl<Idx> Range<Idx> {
         if start >= end {
             Range::Empty
         } else {
-            Range::ContinuousExclusive(ContinuousRangeExclusive { start, end })
+            Range::ContinuousExclusive(start, end)
         }
     }
 
@@ -114,7 +108,7 @@ impl<Idx> Range<Idx> {
         if start >= end {
             Range::Empty
         } else {
-            Range::ContinuousStartExclusive(ContinuousRangeStartExclusive { start, end })
+            Range::ContinuousStartExclusive(start, end)
         }
     }
 
@@ -129,7 +123,7 @@ impl<Idx> Range<Idx> {
         if start >= end {
             Range::Empty
         } else {
-            Range::ContinuousEndExclusive(ContinuousRangeEndExclusive { start, end })
+            Range::ContinuousEndExclusive(start, end)
         }
     }
 
@@ -138,7 +132,7 @@ impl<Idx> Range<Idx> {
     /// `[start..)`
     #[must_use]
     pub fn from(start: Idx) -> Range<Idx> {
-        Range::From(ContinuousRangeFromInclusive { start })
+        Range::From(start)
     }
 
     /// A range starting from `start` (exclusive)
@@ -146,7 +140,7 @@ impl<Idx> Range<Idx> {
     /// `(start..)`
     #[must_use]
     pub fn from_exclusive(start: Idx) -> Range<Idx> {
-        Range::FromExclusive(ContinuousRangeFromExclusive { start })
+        Range::FromExclusive(start)
     }
 
     /// A range ending with `end` (inclusive)
@@ -154,7 +148,7 @@ impl<Idx> Range<Idx> {
     /// `(..end]`
     #[must_use]
     pub fn to(end: Idx) -> Range<Idx> {
-        Range::To(ContinuousRangeToInclusive { end })
+        Range::To(end)
     }
 
     /// A range ending with `end` (exclusive)
@@ -162,7 +156,7 @@ impl<Idx> Range<Idx> {
     /// `(..end)`
     #[must_use]
     pub fn to_exclusive(end: Idx) -> Range<Idx> {
-        Range::ToExclusive(ContinuousRangeToExclusive { end })
+        Range::ToExclusive(end)
     }
 
     /// A range containing all values
@@ -214,14 +208,20 @@ impl<Idx> Range<Idx> {
                 // require something like the 'typemap' crate just for that.
                 None
             }
-            Self::Continuous(r) => Some((r.start_bound(), r.end_bound())),
-            Self::ContinuousExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Self::ContinuousStartExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Self::ContinuousEndExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Self::From(r) => Some((r.start_bound(), r.end_bound())),
-            Self::FromExclusive(r) => Some((r.start_bound(), r.end_bound())),
-            Self::To(r) => Some((r.start_bound(), r.end_bound())),
-            Self::ToExclusive(r) => Some((r.start_bound(), r.end_bound())),
+            Self::Continuous(start, end) => Some((Bound::Included(start), Bound::Included(end))),
+            Self::ContinuousExclusive(start, end) => {
+                Some((Bound::Excluded(start), Bound::Excluded(end)))
+            }
+            Self::ContinuousStartExclusive(start, end) => {
+                Some((Bound::Excluded(start), Bound::Included(end)))
+            }
+            Self::ContinuousEndExclusive(start, end) => {
+                Some((Bound::Included(start), Bound::Excluded(end)))
+            }
+            Self::From(start) => Some((Bound::Included(start), Bound::Unbounded)),
+            Self::FromExclusive(start) => Some((Bound::Excluded(start), Bound::Unbounded)),
+            Self::To(end) => Some((Bound::Unbounded, Bound::Included(end))),
+            Self::ToExclusive(end) => Some((Bound::Unbounded, Bound::Excluded(end))),
             Self::Full => Some((Bound::Unbounded, Bound::Unbounded)),
             Self::Composite(_) => None, // TODO: custom implementation of bounds
         }
@@ -234,14 +234,26 @@ impl<Idx> Range<Idx> {
     {
         match self {
             Self::Empty => false,
-            Self::Continuous(r) => r.contains(value.borrow()),
-            Self::ContinuousExclusive(r) => r.contains(value.borrow()),
-            Self::ContinuousStartExclusive(r) => r.contains(value.borrow()),
-            Self::ContinuousEndExclusive(r) => r.contains(value.borrow()),
-            Self::From(r) => r.contains(value.borrow()),
-            Self::FromExclusive(r) => r.contains(value.borrow()),
-            Self::To(r) => r.contains(value.borrow()),
-            Self::ToExclusive(r) => r.contains(value.borrow()),
+            Self::Continuous(start, end) => {
+                let value = value.borrow();
+                value >= start && value <= end
+            }
+            Self::ContinuousExclusive(start, end) => {
+                let value = value.borrow();
+                value > start && value < end
+            }
+            Self::ContinuousStartExclusive(start, end) => {
+                let value = value.borrow();
+                value > start && value <= end
+            }
+            Self::ContinuousEndExclusive(start, end) => {
+                let value = value.borrow();
+                value >= start && value < end
+            }
+            Self::From(start) => value.borrow() >= start,
+            Self::FromExclusive(start) => value.borrow() > start,
+            Self::To(end) => value.borrow() <= end,
+            Self::ToExclusive(end) => value.borrow() < end,
             Self::Full => true,
             Self::Composite(r) => {
                 let value = value.borrow();
@@ -323,14 +335,58 @@ impl<Idx: fmt::Debug> fmt::Debug for Range<Idx> {
         match self {
             Range::Empty => write!(fmt, "[]")?,
             Range::Full => write!(fmt, "(..)")?,
-            Range::Continuous(r) => fmt::Debug::fmt(r, fmt)?,
-            Range::ContinuousExclusive(r) => fmt::Debug::fmt(r, fmt)?,
-            Range::ContinuousStartExclusive(r) => fmt::Debug::fmt(r, fmt)?,
-            Range::ContinuousEndExclusive(r) => fmt::Debug::fmt(r, fmt)?,
-            Range::From(r) => fmt::Debug::fmt(r, fmt)?,
-            Range::FromExclusive(r) => fmt::Debug::fmt(r, fmt)?,
-            Range::To(r) => fmt::Debug::fmt(r, fmt)?,
-            Range::ToExclusive(r) => fmt::Debug::fmt(r, fmt)?,
+            Range::Continuous(start, end) => {
+                write!(fmt, "[")?;
+                start.fmt(fmt)?;
+                write!(fmt, "..")?;
+                end.fmt(fmt)?;
+                write!(fmt, "]")?;
+            }
+            Range::ContinuousExclusive(start, end) => {
+                write!(fmt, "(")?;
+                start.fmt(fmt)?;
+                write!(fmt, "..")?;
+                end.fmt(fmt)?;
+                write!(fmt, ")")?;
+            }
+            Range::ContinuousStartExclusive(start, end) => {
+                write!(fmt, "(")?;
+                start.fmt(fmt)?;
+                write!(fmt, "..")?;
+                end.fmt(fmt)?;
+                write!(fmt, "]")?;
+            }
+            Range::ContinuousEndExclusive(start, end) => {
+                write!(fmt, "[")?;
+                start.fmt(fmt)?;
+                write!(fmt, "..")?;
+                end.fmt(fmt)?;
+                write!(fmt, ")")?;
+            }
+            Range::From(start) => {
+                write!(fmt, "[")?;
+                start.fmt(fmt)?;
+                write!(fmt, "..")?;
+                write!(fmt, ")")?;
+            }
+            Range::FromExclusive(start) => {
+                write!(fmt, "(")?;
+                start.fmt(fmt)?;
+                write!(fmt, "..")?;
+                write!(fmt, ")")?;
+            }
+            Range::To(end) => {
+                write!(fmt, "(")?;
+                write!(fmt, "..")?;
+                end.fmt(fmt)?;
+                write!(fmt, "]")?;
+            }
+            Range::ToExclusive(end) => {
+                write!(fmt, "(")?;
+                write!(fmt, "..")?;
+                end.fmt(fmt)?;
+                write!(fmt, ")")?;
+            }
             Range::Composite(r) => {
                 write!(fmt, "{{")?;
                 let mut first = true;

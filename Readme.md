@@ -21,3 +21,7 @@ With support for the following operations:
 * Contains range
 * Contains value
 * Overlaps
+* Simplification
+
+The range type is an enum of all the possible range subtypes.
+The default behaviour for ranges constructed via methods is to be simplified and sorted but non-simplified ranges can be constructed by creating the enum members directly.
