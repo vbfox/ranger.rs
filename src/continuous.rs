@@ -13,6 +13,11 @@ pub enum ContinuousRange<Idx> {
     /// `[]`
     Empty,
 
+    /// A range containing a single value
+    ///
+    /// `value`
+    Single(Idx),
+
     /// A range between `start` (inclusive) and `end` (inclusive)
     ///
     /// `[start..end]`
@@ -66,6 +71,14 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         ContinuousRange::Empty
     }
 
+    /// A range containing a single value
+    ///
+    /// `value`
+    #[must_use]
+    pub fn single(value: Idx) -> ContinuousRange<Idx> {
+        ContinuousRange::Single(value)
+    }
+
     /// A range between `start` (inclusive) and `end` (inclusive)
     ///
     /// `[start..end]`
@@ -74,7 +87,9 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     where
         Idx: PartialOrd,
     {
-        if start > end {
+        if start == end {
+            ContinuousRange::Single(start)
+        } else if start > end {
             ContinuousRange::Empty
         } else {
             ContinuousRange::Inclusive(start, end)
@@ -174,6 +189,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
                 // require something like the 'typemap' crate just for that.
                 None
             }
+            Self::Single(value) => Some((Bound::Included(&value), Bound::Included(&value))),
             Self::Inclusive(start, end) => Some((Bound::Included(start), Bound::Included(end))),
             Self::Exclusive(start, end) => Some((Bound::Excluded(start), Bound::Excluded(end))),
             Self::StartExclusive(start, end) => {
@@ -191,10 +207,11 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     #[must_use]
     pub fn contains(&self, value: impl Borrow<Idx>) -> bool
     where
-        Idx: PartialOrd,
+        Idx: PartialOrd + PartialEq,
     {
         match self {
             Self::Empty => false,
+            Self::Single(value) => value == value.borrow(),
             Self::Inclusive(start, end) => {
                 let value = value.borrow();
                 value >= start && value <= end
@@ -259,8 +276,11 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     {
         match self {
             ContinuousRange::Empty => {}
+            ContinuousRange::Single(_) => {}
             ContinuousRange::Inclusive(start, end) => {
-                if start > end {
+                if start == end {
+                    *self = ContinuousRange::Single(start.clone())
+                } else if start > end {
                     *self = ContinuousRange::Empty
                 }
             }
@@ -302,6 +322,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Empty => true,
+            Self::Single(_) => false,
 
             // bounded ranges with inverted bounds are considered empty
             Self::Inclusive(start, end) => start > end,
@@ -368,6 +389,7 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRange<Idx> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ContinuousRange::Empty => write!(fmt, "[]")?,
+            ContinuousRange::Single(value) => value.fmt(fmt)?,
             ContinuousRange::Full => write!(fmt, "(..)")?,
             ContinuousRange::Inclusive(start, end) => {
                 write!(fmt, "[")?;
@@ -423,5 +445,11 @@ impl<Idx: fmt::Debug> fmt::Debug for ContinuousRange<Idx> {
             }
         }
         Ok(())
+    }
+}
+
+impl<Idx> Default for ContinuousRange<Idx> {
+    fn default() -> Self {
+        Self::Empty
     }
 }

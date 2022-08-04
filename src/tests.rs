@@ -16,7 +16,7 @@ mod test_fmt_debug {
     #[test]
     pub fn continuous_equal() {
         let r: Range<_> = (1..=1).into();
-        assert_eq!(format!("{:?}", r), "[1..1]");
+        assert_eq!(format!("{:?}", r), "1");
     }
 
     #[test]

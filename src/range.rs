@@ -28,6 +28,14 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
         Range::Continuous(ContinuousRange::empty())
     }
 
+    /// A range containing a single value
+    ///
+    /// `value`
+    #[must_use]
+    pub fn single(value: Idx) -> Range<Idx> {
+        Range::Continuous(ContinuousRange::single(value))
+    }
+
     /// A range between `start` (inclusive) and `end` (inclusive)
     ///
     /// `[start..end]`
@@ -334,5 +342,11 @@ impl<Idx: fmt::Debug> fmt::Debug for Range<Idx> {
             }
         }
         Ok(())
+    }
+}
+
+impl<Idx> Default for Range<Idx> {
+    fn default() -> Self {
+        Self::Continuous(ContinuousRange::Empty)
     }
 }
