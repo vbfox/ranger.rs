@@ -1,11 +1,10 @@
 use std::{
     borrow::Borrow,
     fmt,
-    ops::{self, Bound},
+    ops::{self, Add, Bound, Sub},
 };
 
-#[non_exhaustive]
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Hash)]
 pub enum Range<Idx> {
     /// A range containing no value
     ///
@@ -56,6 +55,112 @@ pub enum Range<Idx> {
     Full,
 
     Composite(Vec<Range<Idx>>),
+}
+
+pub enum RangesRelation {
+    /// The first range is strictly before the second one with no overlap
+    ///
+    /// ```text
+    /// [ A ]
+    ///       [ B ]
+    /// ```
+    StrictlyBefore,
+
+    /// The first range is strictly after the second one with no overlap
+    ///
+    /// ```text
+    ///       [ A ]
+    /// [ B ]
+    /// ```
+    StrictlyAfter,
+
+    ///*
+    /// ```text
+    /// [ A ]
+    ///     [ B ]
+    /// ```
+    ////
+    Meets,
+
+    ///*
+    /// ```text
+    ///     [ A ]
+    /// [ B ]
+    /// ```
+    ////
+    IsMet,
+
+    ///*
+    /// ```text
+    /// [ A ]
+    ///   [ B ]
+    /// ```
+    ////
+    Overlaps,
+
+    ///*
+    /// ```text
+    ///   [ A ]
+    /// [ B ]
+    /// ```
+    ////
+    IsOverlapped,
+
+    ///*
+    /// ```text
+    /// [ A ]
+    /// [   B   ]
+    /// ```
+    ////
+    Starts,
+
+    ///*
+    /// ```text
+    /// [   A   ]
+    /// [ B ]
+    /// ```
+    ////
+    IsStarted,
+
+    ///*
+    /// ```text
+    /// [   A   ]
+    ///   [ B ]
+    /// ```
+    ////
+    StrictlyContains,
+
+    ///*
+    /// ```text
+    ///   [ A ]
+    /// [   B   ]
+    /// ```
+    ////
+    IsStrictlyContained,
+
+    ///*
+    /// ```text
+    ///     [ A ]
+    /// [   B   ]
+    /// ```
+    ////
+    Finishes,
+
+    ///*
+    /// ```text
+    /// [   A   ]
+    ///     [ B ]
+    /// ```
+    ////
+    IsFinished,
+
+    ///*
+    /// ```text
+    /// [ A ]
+    /// [ B ]
+    /// ```
+    ////
+    Equal,
 }
 
 impl<Idx> Range<Idx> {
@@ -277,6 +382,52 @@ impl<Idx> Range<Idx> {
     }
 
     #[must_use]
+    pub fn intersection(self, _other: Range<Idx>) -> Range<Idx> {
+        todo!()
+    }
+
+    #[must_use]
+    pub fn difference(self, _other: Range<Idx>) -> Range<Idx> {
+        todo!()
+    }
+
+    #[must_use]
+    pub fn overlaps(self, _other: Range<Idx>) -> bool {
+        todo!()
+    }
+
+    #[must_use]
+    pub fn compare(self, _other: Range<Idx>) -> RangesRelation {
+        todo!()
+    }
+
+    #[must_use]
+    pub fn simplify(self) -> Range<Idx>
+    where
+        Idx: PartialOrd,
+    {
+        match self {
+            Range::Empty => self,
+            Range::Continuous(ref start, ref end) => {
+                if start > end {
+                    Range::Empty
+                } else {
+                    self
+                }
+            }
+            Range::ContinuousExclusive(_, _) => todo!(),
+            Range::ContinuousStartExclusive(_, _) => todo!(),
+            Range::ContinuousEndExclusive(_, _) => todo!(),
+            Range::From(_) => self,
+            Range::FromExclusive(_) => self,
+            Range::To(_) => self,
+            Range::ToExclusive(_) => self,
+            Range::Full => self,
+            Range::Composite(_) => todo!(),
+        }
+    }
+
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Empty => true,
@@ -289,6 +440,45 @@ impl<Idx> Range<Idx> {
         match self {
             Self::Full => true,
             _ => false,
+        }
+    }
+}
+
+impl<Idx: PartialOrd> Add<Range<Idx>> for Range<Idx> {
+    type Output = Range<Idx>;
+
+    fn add(self, other: Range<Idx>) -> Range<Idx> {
+        self.union(other)
+    }
+}
+
+impl<Idx: PartialOrd> Sub<Range<Idx>> for Range<Idx> {
+    type Output = Range<Idx>;
+
+    fn sub(self, other: Range<Idx>) -> Range<Idx> {
+        self.difference(other)
+    }
+}
+
+impl<Idx: PartialEq> PartialEq for Range<Idx> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Continuous(l0, l1), Self::Continuous(r0, r1)) => l0 == r0 && l1 == r1,
+            (Self::ContinuousExclusive(l0, l1), Self::ContinuousExclusive(r0, r1)) => {
+                l0 == r0 && l1 == r1
+            }
+            (Self::ContinuousStartExclusive(l0, l1), Self::ContinuousStartExclusive(r0, r1)) => {
+                l0 == r0 && l1 == r1
+            }
+            (Self::ContinuousEndExclusive(l0, l1), Self::ContinuousEndExclusive(r0, r1)) => {
+                l0 == r0 && l1 == r1
+            }
+            (Self::From(l0), Self::From(r0)) => l0 == r0,
+            (Self::FromExclusive(l0), Self::FromExclusive(r0)) => l0 == r0,
+            (Self::To(l0), Self::To(r0)) => l0 == r0,
+            (Self::ToExclusive(l0), Self::ToExclusive(r0)) => l0 == r0,
+            (Self::Composite(l0), Self::Composite(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
 }
