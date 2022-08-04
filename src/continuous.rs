@@ -227,7 +227,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         match (self, other) {
             (ContinuousRange::Empty, r) | (r, ContinuousRange::Empty) => Some(r),
             (ContinuousRange::Full, _) | (_, ContinuousRange::Full) => Some(ContinuousRange::Full),
-            (r1, r2) => todo!(),
+            (_r1, _r2) => todo!(),
         }
     }
 
@@ -248,7 +248,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
     #[must_use]
     /// Compare the bounds of two ranges
-    pub fn compare(self, other: ContinuousRange<Idx>) -> RangesRelation {
+    pub fn compare(self, _other: ContinuousRange<Idx>) -> RangesRelation {
         // Inspired from "Maintaining Knowledge about Temporal Intervals"
         todo!()
     }
@@ -259,14 +259,26 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     {
         match self {
             ContinuousRange::Empty => {}
-            ContinuousRange::Inclusive(ref start, ref end) => {
+            ContinuousRange::Inclusive(start, end) => {
                 if start > end {
                     *self = ContinuousRange::Empty
                 }
             }
-            ContinuousRange::Exclusive(_, _) => todo!(),
-            ContinuousRange::StartExclusive(_, _) => todo!(),
-            ContinuousRange::EndExclusive(_, _) => todo!(),
+            ContinuousRange::Exclusive(start, end) => {
+                if start >= end {
+                    *self = ContinuousRange::Empty
+                }
+            }
+            ContinuousRange::StartExclusive(start, end) => {
+                if start >= end {
+                    *self = ContinuousRange::Empty
+                }
+            }
+            ContinuousRange::EndExclusive(start, end) => {
+                if start >= end {
+                    *self = ContinuousRange::Empty
+                }
+            }
             ContinuousRange::From(_) => {}
             ContinuousRange::FromExclusive(_) => {}
             ContinuousRange::To(_) => {}

@@ -10,7 +10,7 @@ use crate::{ContinuousRange, RangesRelation};
 pub enum Range<Idx> {
     Continuous(ContinuousRange<Idx>),
 
-    Composite(Vec<Range<Idx>>),
+    Composite(Vec<ContinuousRange<Idx>>),
 }
 
 impl<Idx> From<ContinuousRange<Idx>> for Range<Idx> {
@@ -111,32 +111,34 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
     }
 
     #[must_use]
-    pub fn composite(items: Vec<Range<Idx>>) -> Range<Idx>
+    pub fn composite(items: impl IntoIterator<Item = Range<Idx>>) -> Range<Idx>
     where
         Idx: PartialOrd,
     {
-        match items.len() {
-            0 => Self::empty(),
-            1 => items.into_iter().next().unwrap(),
+        let mut iter = items.into_iter();
+
+        match iter.size_hint() {
+            (_, Some(0)) => Self::empty(),
+            (1, Some(1)) => iter.next().unwrap(),
             _ => {
                 let mut new_items = vec![];
 
-                for item in items.into_iter() {
+                for item in iter {
                     match item {
                         r if r.is_empty() => continue,
                         r if r.is_full() => {
                             return r;
                         }
-                        Self::Composite(sub_items) => {
-                            new_items.extend(sub_items);
+                        Self::Composite(v) => {
+                            new_items.extend(v);
                         }
-                        _ => new_items.push(item),
+                        Self::Continuous(r) => new_items.push(r),
                     }
                 }
 
                 match new_items.len() {
                     0 => Self::empty(),
-                    1 => new_items.into_iter().next().unwrap(),
+                    1 => Self::Continuous(new_items.into_iter().next().unwrap()),
                     _ => Self::Composite(new_items),
                 }
             }
@@ -198,7 +200,7 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
 
     #[must_use]
     /// Compare the bounds of two ranges
-    pub fn compare_bounds(self, other: Range<Idx>) -> RangesRelation {
+    pub fn compare_bounds(self, _other: Range<Idx>) -> RangesRelation {
         // Inspired from "Maintaining Knowledge about Temporal Intervals"
         todo!()
     }
@@ -209,7 +211,17 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
     {
         match self {
             Self::Continuous(r) => r.simplify_mut(),
-            Self::Composite(_) => todo!(),
+            Self::Composite(v) => {
+                // TODO: Handle much more cases
+                // - Empty ranges
+                // - Full ranges
+                // - Ranges with only one element
+                // - Merge overlapping ranges
+                // - ...
+                for item in v.iter_mut() {
+                    item.simplify_mut();
+                }
+            }
         }
     }
 
