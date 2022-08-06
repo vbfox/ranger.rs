@@ -10,3 +10,6 @@ pub use relation::RangesRelation;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod continuous_tests;
