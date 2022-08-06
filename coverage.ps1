@@ -7,7 +7,7 @@ function ThrowOnNativeFailure {
     }
 }
 
-Remove-Item 'target' -Recurse
+# Remove-Item 'target' -Recurse
 
 # Export the flags needed to instrument the program to collect code coverage.
 $env:RUSTFLAGS = "-Cinstrument-coverage"

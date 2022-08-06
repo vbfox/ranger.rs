@@ -211,7 +211,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     {
         match self {
             Self::Empty => false,
-            Self::Single(value) => value == value.borrow(),
+            Self::Single(single_value) => single_value == value.borrow(),
             Self::Inclusive(start, end) => {
                 let value = value.borrow();
                 value >= start && value <= end
@@ -345,6 +345,12 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             Self::Full => true,
             _ => false,
         }
+    }
+}
+
+impl<Idx: PartialOrd + Clone> From<()> for ContinuousRange<Idx> {
+    fn from(_: ()) -> Self {
+        Self::empty()
     }
 }
 
