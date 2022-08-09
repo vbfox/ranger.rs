@@ -824,3 +824,82 @@ mod test_contains {
         assert_eq!(r.contains(MAX_I32), true);
     }
 }
+
+mod test_compare {
+    use crate::{ContinuousRange, RangesRelation};
+
+    macro_rules! compare {
+        ($a:expr, $b:expr, $relation:expr) => {
+            assert_eq!($a.compare(&$b), $relation);
+        };
+    }
+
+    #[test]
+    pub fn empty() {
+        compare!(
+            ContinuousRange::<i32>::Empty,
+            ContinuousRange::<i32>::Empty,
+            Some(RangesRelation::Equal)
+        );
+        compare!(
+            ContinuousRange::<i32>::Empty,
+            ContinuousRange::Inclusive(5, 1),
+            Some(RangesRelation::Equal)
+        );
+        compare!(
+            ContinuousRange::<i32>::Empty,
+            ContinuousRange::Inclusive(1, 5),
+            None
+        );
+        compare!(
+            ContinuousRange::Inclusive(1, 5),
+            ContinuousRange::<i32>::Empty,
+            None
+        );
+        compare!(
+            ContinuousRange::Inclusive(1, 5),
+            ContinuousRange::Inclusive(5, 1),
+            None
+        );
+    }
+
+    #[test]
+    pub fn strictly_before() {
+        macro_rules! strictly_before {
+            ($a:expr, $b:expr) => {
+                compare!($a, $b, Some(RangesRelation::StrictlyBefore));
+            };
+        }
+
+        strictly_before!(
+            ContinuousRange::Inclusive(1, 5),
+            ContinuousRange::Inclusive(6, 10)
+        );
+        strictly_before!(
+            ContinuousRange::Exclusive(1, 5),
+            ContinuousRange::Exclusive(6, 10)
+        );
+        /*
+        assert_eq!(
+            ContinuousRange::Exclusive(1, 5).compare(&ContinuousRange::Exclusive(5, 10)),
+            Some(RangesRelation::StrictlyBefore)
+        );
+         */
+        strictly_before!(
+            ContinuousRange::Exclusive(1, 5),
+            ContinuousRange::Inclusive(5, 10)
+        );
+        strictly_before!(
+            ContinuousRange::Inclusive(1, 5),
+            ContinuousRange::Exclusive(5, 10)
+        );
+        strictly_before!(
+            ContinuousRange::EndExclusive(1, 5),
+            ContinuousRange::Inclusive(5, 10)
+        );
+        strictly_before!(
+            ContinuousRange::Inclusive(1, 5),
+            ContinuousRange::StartExclusive(5, 10)
+        );
+    }
+}

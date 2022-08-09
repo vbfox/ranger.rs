@@ -1,9 +1,5 @@
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub enum RangesRelation {
-    /// The two ranges have no relation.
-    ///
-    /// Can happen if for example one is the empty range.
-    None,
-
     /// The first range is strictly before the second one with no overlap
     ///
     /// ```text
@@ -112,9 +108,7 @@ pub enum RangesRelation {
 impl RangesRelation {
     pub fn intersects(&self) -> bool {
         match self {
-            RangesRelation::None
-            | RangesRelation::StrictlyBefore
-            | RangesRelation::StrictlyAfter => false,
+            RangesRelation::StrictlyBefore | RangesRelation::StrictlyAfter => false,
 
             RangesRelation::Overlaps
             | RangesRelation::IsOverlapped

@@ -83,7 +83,7 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
                     (BoundSide::Start, BoundSide::Start) => Some(Ordering::Less),
                     (BoundSide::End, BoundSide::End) => Some(Ordering::Greater),
                     (BoundSide::Start, BoundSide::End) => Some(Ordering::Greater),
-                    (BoundSide::End, BoundSide::Start) => Some(Ordering::Greater),
+                    (BoundSide::End, BoundSide::Start) => Some(Ordering::Less),
                 },
                 other => other,
             },
@@ -94,7 +94,7 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
                 Some(Ordering::Equal) => match (this_side, other_side) {
                     (BoundSide::Start, BoundSide::Start) => Some(Ordering::Greater),
                     (BoundSide::End, BoundSide::End) => Some(Ordering::Less),
-                    (BoundSide::Start, BoundSide::End) => Some(Ordering::Less),
+                    (BoundSide::Start, BoundSide::End) => Some(Ordering::Greater),
                     (BoundSide::End, BoundSide::Start) => Some(Ordering::Less),
                 },
                 other => other,
@@ -307,80 +307,75 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
-    pub fn intersects(self, other: ContinuousRange<Idx>) -> bool {
+    pub fn intersects(self, other: &ContinuousRange<Idx>) -> bool
+    where
+        Idx: std::fmt::Debug,
+    {
         // Two empty ranges are 'equal' but we don't want to return true for them
         if self.is_empty() & other.is_empty() {
             false
         } else {
-            self.compare(other).intersects()
+            match self.compare(other) {
+                Some(relation) => relation.intersects(),
+                None => false,
+            }
         }
     }
 
     #[must_use]
     /// Compare the bounds of two ranges
-    pub fn compare(self, other: ContinuousRange<Idx>) -> RangesRelation {
-        // Inspired from "Maintaining Knowledge about Temporal Intervals"
+    pub fn compare(self, other: &ContinuousRange<Idx>) -> Option<RangesRelation>
+    where
+        Idx: std::fmt::Debug,
+    {
+        // Inspired by "Maintaining Knowledge about Temporal Intervals"
 
         // Empty ranges don't have bounds so we need to special case them before anything else
         if self.is_empty() {
             if other.is_empty() {
-                return RangesRelation::Equal;
+                return Some(RangesRelation::Equal);
             } else {
-                return RangesRelation::None;
+                return None;
             }
         } else if other.is_empty() {
-            return RangesRelation::None;
+            return None;
         }
 
         let (self_start, self_end) = self.range_bounds().unwrap();
-        let (other_start, other_end) = self.range_bounds().unwrap();
+        let (other_start, other_end) = other.range_bounds().unwrap();
 
         let cmp_end_start =
-            partial_cmp_bounds(&self_end, BoundSide::End, &other_start, BoundSide::Start);
-        if cmp_end_start.is_none() {
-            return RangesRelation::None;
-        }
-        let cmp_end_start = cmp_end_start.expect("end-start ordering should be Some");
+            partial_cmp_bounds(&self_end, BoundSide::End, &other_start, BoundSide::Start)?;
 
+        println!("{:?} :: {:?}=> {:?}", self_end, other_start, cmp_end_start);
         if cmp_end_start == Ordering::Less {
-            return RangesRelation::StrictlyBefore;
+            return Some(RangesRelation::StrictlyBefore);
         }
 
-        let cmd_start_end =
-            partial_cmp_bounds(&self_start, BoundSide::Start, &other_end, BoundSide::End);
-        if cmd_start_end.is_none() {
-            return RangesRelation::None;
-        }
-        let cmp_start_end = cmd_start_end.expect("start-end ordering should be Some");
+        let cmp_start_end =
+            partial_cmp_bounds(&self_start, BoundSide::Start, &other_end, BoundSide::End)?;
 
         if cmp_start_end == Ordering::Less {
-            return RangesRelation::StrictlyAfter;
+            return Some(RangesRelation::StrictlyAfter);
         }
 
-        let self_cmp = partial_cmp_bounds(&self_start, BoundSide::Start, &self_end, BoundSide::End);
-        if self_cmp.is_none() {
-            return RangesRelation::None;
-        }
-        let self_cmp = self_cmp.expect("self ordering should be Some");
+        let self_cmp =
+            partial_cmp_bounds(&self_start, BoundSide::Start, &self_end, BoundSide::End)?;
 
         let other_cmp =
-            partial_cmp_bounds(&other_start, BoundSide::Start, &other_end, BoundSide::End);
-        if other_cmp.is_none() {
-            return RangesRelation::None;
-        }
-        let other_cmp = other_cmp.expect("other ordering should be Some");
+            partial_cmp_bounds(&other_start, BoundSide::Start, &other_end, BoundSide::End)?;
 
         if cmp_end_start == Ordering::Equal
             && self_cmp != Ordering::Equal
             && other_cmp != Ordering::Equal
         {
-            return RangesRelation::Meets;
+            return Some(RangesRelation::Meets);
         }
         if cmp_start_end == Ordering::Equal
             && self_cmp != Ordering::Equal
             && other_cmp != Ordering::Equal
         {
-            return RangesRelation::IsMet;
+            return Some(RangesRelation::IsMet);
         }
 
         let cmp_start_start = partial_cmp_bounds(
@@ -388,50 +383,42 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             BoundSide::Start,
             &other_start,
             BoundSide::Start,
-        );
-        if cmp_start_start.is_none() {
-            return RangesRelation::None;
-        }
-        let cmp_start_start = cmp_start_start.expect("start-start ordering should be Some");
-
-        let cmp_end_end = partial_cmp_bounds(&self_end, BoundSide::End, &other_end, BoundSide::End);
-        if cmp_end_end.is_none() {
-            return RangesRelation::None;
-        }
-        let cmp_end_end = cmp_end_end.expect("end-end ordering should be Some");
+        )?;
+        let cmp_end_end =
+            partial_cmp_bounds(&self_end, BoundSide::End, &other_end, BoundSide::End)?;
 
         if cmp_start_start == Ordering::Less
             && cmp_end_start == Ordering::Greater
             && cmp_end_end == Ordering::Less
         {
-            return RangesRelation::Overlaps;
+            return Some(RangesRelation::Overlaps);
         }
         if cmp_start_start == Ordering::Greater
             && cmp_start_end == Ordering::Less
             && cmp_end_end == Ordering::Greater
         {
-            return RangesRelation::IsOverlapped;
+            return Some(RangesRelation::IsOverlapped);
         }
         if cmp_start_start == Ordering::Equal && cmp_end_end == Ordering::Less {
-            return RangesRelation::Starts;
+            return Some(RangesRelation::Starts);
         }
         if cmp_start_start == Ordering::Equal && cmp_end_end == Ordering::Greater {
-            return RangesRelation::IsStarted;
+            return Some(RangesRelation::IsStarted);
         }
         if cmp_start_start == Ordering::Greater && cmp_end_end == Ordering::Equal {
-            return RangesRelation::Finishes;
+            return Some(RangesRelation::Finishes);
         }
         if cmp_start_start == Ordering::Less && cmp_end_end == Ordering::Equal {
-            return RangesRelation::IsFinished;
+            return Some(RangesRelation::IsFinished);
         }
         if cmp_start_start == Ordering::Less && cmp_end_end == Ordering::Greater {
-            return RangesRelation::StrictlyContains;
+            return Some(RangesRelation::StrictlyContains);
         }
         if cmp_start_start == Ordering::Greater && cmp_end_end == Ordering::Less {
-            return RangesRelation::IsStrictlyContained;
+            return Some(RangesRelation::IsStrictlyContained);
         }
         if cmp_start_start == Ordering::Equal && cmp_end_end == Ordering::Equal {
-            return RangesRelation::Equal;
+            return Some(RangesRelation::Equal);
         }
 
         panic!("Impossible case");
