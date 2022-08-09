@@ -670,7 +670,6 @@ mod test_simplify {
     }
 }
 
-
 mod test_contains {
     use crate::ContinuousRange;
 
