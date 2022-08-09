@@ -116,6 +116,7 @@ mod test_fmt_debug {
     }
 }
 
+#[allow(clippy::reversed_empty_ranges)]
 mod test_from_stdlib {
     use assert_matches::assert_matches;
 

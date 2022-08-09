@@ -237,7 +237,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
                 // require something like the 'typemap' crate just for that.
                 None
             }
-            Self::Single(value) => Some((Bound::Included(&value), Bound::Included(&value))),
+            Self::Single(value) => Some((Bound::Included(value), Bound::Included(value))),
             Self::Inclusive(start, end) => Some((Bound::Included(start), Bound::Included(end))),
             Self::Exclusive(start, end) => Some((Bound::Excluded(start), Bound::Excluded(end))),
             Self::StartExclusive(start, end) => {
@@ -342,7 +342,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
         let cmp_end_start = cmp_end_start.expect("end-start ordering should be Some");
 
-        if (cmp_end_start == Ordering::Less) {
+        if cmp_end_start == Ordering::Less {
             return RangesRelation::StrictlyBefore;
         }
 
@@ -353,7 +353,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
         let cmp_start_end = cmd_start_end.expect("start-end ordering should be Some");
 
-        if (cmp_start_end == Ordering::Less) {
+        if cmp_start_end == Ordering::Less {
             return RangesRelation::StrictlyAfter;
         }
 
@@ -370,15 +370,15 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
         let other_cmp = other_cmp.expect("other ordering should be Some");
 
-        if (cmp_end_start == Ordering::Equal
+        if cmp_end_start == Ordering::Equal
             && self_cmp != Ordering::Equal
-            && other_cmp != Ordering::Equal)
+            && other_cmp != Ordering::Equal
         {
             return RangesRelation::Meets;
         }
-        if (cmp_start_end == Ordering::Equal
+        if cmp_start_end == Ordering::Equal
             && self_cmp != Ordering::Equal
-            && other_cmp != Ordering::Equal)
+            && other_cmp != Ordering::Equal
         {
             return RangesRelation::IsMet;
         }
@@ -400,19 +400,19 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
         let cmp_end_end = cmp_end_end.expect("end-end ordering should be Some");
 
-        if (cmp_start_start == Ordering::Less
+        if cmp_start_start == Ordering::Less
             && cmp_end_start == Ordering::Greater
-            && cmp_end_end == Ordering::Less)
+            && cmp_end_end == Ordering::Less
         {
             return RangesRelation::Overlaps;
         }
-        if (cmp_start_start == Ordering::Greater
+        if cmp_start_start == Ordering::Greater
             && cmp_start_end == Ordering::Less
-            && cmp_end_end == Ordering::Greater)
+            && cmp_end_end == Ordering::Greater
         {
             return RangesRelation::IsOverlapped;
         }
-        if (cmp_start_start == Ordering::Equal && cmp_end_end == Ordering::Less) {
+        if cmp_start_start == Ordering::Equal && cmp_end_end == Ordering::Less {
             return RangesRelation::Starts;
         }
         if cmp_start_start == Ordering::Equal && cmp_end_end == Ordering::Greater {

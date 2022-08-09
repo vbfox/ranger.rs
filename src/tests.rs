@@ -1,3 +1,4 @@
+#[allow(clippy::reversed_empty_ranges)]
 mod test_fmt_debug {
     use crate::Range;
 
@@ -128,6 +129,7 @@ mod test_fmt_debug {
     }
 }
 
+#[allow(clippy::reversed_empty_ranges)]
 mod test_contains {
     use crate::Range;
 
@@ -264,6 +266,7 @@ mod test_contains {
     }
 }
 
+#[allow(clippy::reversed_empty_ranges)]
 mod test_is_empty {
     use crate::Range;
 
@@ -358,6 +361,7 @@ mod test_is_empty {
     }
 }
 
+#[allow(clippy::reversed_empty_ranges)]
 mod test_is_full {
     use crate::Range;
 
