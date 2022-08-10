@@ -1,5 +1,7 @@
 # Range ranger
 
+[![Build](https://github.com/vbfox/ranger.rs/actions/workflows/ci.yml/badge.svg)](https://github.com/vbfox/ranger.rs/actions/workflows/ci.yml)
+
 **This library is a WORK IN PROGRESS experiment into rust APIs for me**
 
 Range ranger is a range manipulation library supporting multiple type of ranges under a single type:
