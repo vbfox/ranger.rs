@@ -952,4 +952,104 @@ mod test_compare {
             ContinuousRange::StartExclusive(5, 10)
         );
     }
+
+    #[test]
+    pub fn strictly_contains_and_is_strictly_contained() {
+        macro_rules! strictly_contains {
+            ($a:expr, $b:expr) => {
+                compare!($a, $b, Some(RangesRelation::StrictlyContains));
+                compare!($b, $a, Some(RangesRelation::IsStrictlyContained));
+            };
+        }
+
+        strictly_contains!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::Single(1)
+        );
+        strictly_contains!(
+            ContinuousRange::Exclusive(0, 10),
+            ContinuousRange::Single(5)
+        );
+
+        strictly_contains!(
+            ContinuousRange::Inclusive(1, 10),
+            ContinuousRange::Inclusive(2, 9)
+        );
+        strictly_contains!(
+            ContinuousRange::Inclusive(1, 10),
+            ContinuousRange::Exclusive(2, 9)
+        );
+        strictly_contains!(
+            ContinuousRange::Inclusive(1, 10),
+            ContinuousRange::Exclusive(1, 10)
+        );
+        strictly_contains!(
+            ContinuousRange::Inclusive(1, 10),
+            ContinuousRange::StartExclusive(2, 9)
+        );
+        strictly_contains!(
+            ContinuousRange::Inclusive(1, 10),
+            ContinuousRange::StartExclusive(1, 9)
+        );
+        strictly_contains!(
+            ContinuousRange::Inclusive(1, 10),
+            ContinuousRange::EndExclusive(2, 9)
+        );
+        strictly_contains!(
+            ContinuousRange::Inclusive(1, 10),
+            ContinuousRange::EndExclusive(2, 10)
+        );
+
+        strictly_contains!(
+            ContinuousRange::From(0),
+            ContinuousRange::Inclusive(2, 10)
+        );
+        strictly_contains!(
+            ContinuousRange::From(0),
+            ContinuousRange::Exclusive(2, 10)
+        );
+        strictly_contains!(
+            ContinuousRange::From(0),
+            ContinuousRange::Exclusive(0, 10)
+        );
+        strictly_contains!(
+            ContinuousRange::From(0),
+            ContinuousRange::StartExclusive(2, 10)
+        );
+        strictly_contains!(
+            ContinuousRange::From(0),
+            ContinuousRange::StartExclusive(0, 10)
+        );
+        strictly_contains!(
+            ContinuousRange::From(0),
+            ContinuousRange::EndExclusive(2, 10)
+        );
+
+        strictly_contains!(
+            ContinuousRange::To(20),
+            ContinuousRange::Inclusive(0, 19)
+        );
+        strictly_contains!(
+            ContinuousRange::To(20),
+            ContinuousRange::Exclusive(0, 19)
+        );
+        strictly_contains!(
+            ContinuousRange::To(20),
+            ContinuousRange::Exclusive(0, 20)
+        );
+        strictly_contains!(
+            ContinuousRange::To(20),
+            ContinuousRange::StartExclusive(0, 19)
+        );
+        strictly_contains!(
+            ContinuousRange::To(20),
+            ContinuousRange::EndExclusive(0, 19)
+        );
+        strictly_contains!(
+            ContinuousRange::To(20),
+            ContinuousRange::EndExclusive(0, 20)
+        );
+    }
+
+
 }

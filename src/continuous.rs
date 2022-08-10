@@ -112,8 +112,8 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
                 other => other,
             },
             Bound::Unbounded => match other_side {
-                BoundSide::Start => Some(Ordering::Less),  // -Inf
-                BoundSide::End => Some(Ordering::Greater), // +Inf
+                BoundSide::Start => Some(Ordering::Greater),  // -Inf
+                BoundSide::End => Some(Ordering::Less), // +Inf
             },
         },
         Bound::Unbounded => match other {
