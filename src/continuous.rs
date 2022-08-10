@@ -469,7 +469,8 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             return Some(RangesRelation::Equal);
         }
 
-        panic!("Impossible case");
+        // Should be unreachable if PartialOrd contract is correctly implemented
+        None
     }
 
     pub fn simplify_mut(&mut self)
