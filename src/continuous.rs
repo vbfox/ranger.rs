@@ -333,7 +333,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         Idx: std::fmt::Debug,
     {
         // Two empty ranges are 'equal' but we don't want to return true for them
-        if self.is_empty() & other.is_empty() {
+        if self.is_empty() && other.is_empty() {
             false
         } else {
             match self.compare(other) {
