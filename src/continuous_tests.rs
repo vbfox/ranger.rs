@@ -864,12 +864,52 @@ mod test_compare {
     }
 
     #[test]
-    pub fn strictly_before() {
+    pub fn full() {
+        compare!(
+            ContinuousRange::<i32>::Full,
+            ContinuousRange::<i32>::Full,
+            Some(RangesRelation::Equal)
+        );
+        compare!(
+            ContinuousRange::<i32>::Full,
+            ContinuousRange::<i32>::Empty,
+            None
+        );
+        compare!(
+            ContinuousRange::<i32>::Full,
+            ContinuousRange::Inclusive(1, 5),
+            Some(RangesRelation::StrictlyContains)
+        );
+        compare!(
+            ContinuousRange::Inclusive(1, 5),
+            ContinuousRange::<i32>::Full,
+            Some(RangesRelation::IsStrictlyContained)
+        );
+    }
+
+    #[test]
+    pub fn strictly_before_and_after() {
         macro_rules! strictly_before {
             ($a:expr, $b:expr) => {
                 compare!($a, $b, Some(RangesRelation::StrictlyBefore));
+                compare!($b, $a, Some(RangesRelation::StrictlyAfter));
             };
         }
+
+        strictly_before!(
+            ContinuousRange::Single(1),
+            ContinuousRange::Inclusive(6, 10)
+        );
+        strictly_before!(ContinuousRange::Single(1), ContinuousRange::Single(5));
+        strictly_before!(ContinuousRange::Inclusive(1, 4), ContinuousRange::Single(5));
+        strictly_before!(
+            ContinuousRange::Single(1),
+            ContinuousRange::Exclusive(1, 10)
+        );
+        strictly_before!(
+            ContinuousRange::EndExclusive(1, 5),
+            ContinuousRange::Single(5)
+        );
 
         strictly_before!(
             ContinuousRange::Inclusive(1, 5),
@@ -879,12 +919,10 @@ mod test_compare {
             ContinuousRange::Exclusive(1, 5),
             ContinuousRange::Exclusive(6, 10)
         );
-        /*
-        assert_eq!(
-            ContinuousRange::Exclusive(1, 5).compare(&ContinuousRange::Exclusive(5, 10)),
-            Some(RangesRelation::StrictlyBefore)
+        strictly_before!(
+            ContinuousRange::Exclusive(1, 5),
+            ContinuousRange::Exclusive(5, 10)
         );
-         */
         strictly_before!(
             ContinuousRange::Exclusive(1, 5),
             ContinuousRange::Inclusive(5, 10)
@@ -899,6 +937,18 @@ mod test_compare {
         );
         strictly_before!(
             ContinuousRange::Inclusive(1, 5),
+            ContinuousRange::StartExclusive(5, 10)
+        );
+
+        strictly_before!(ContinuousRange::Inclusive(1, 5), ContinuousRange::From(6));
+        strictly_before!(ContinuousRange::To(5), ContinuousRange::From(6));
+        strictly_before!(ContinuousRange::To(5), ContinuousRange::Inclusive(6, 10));
+        strictly_before!(
+            ContinuousRange::EndExclusive(1, 6),
+            ContinuousRange::From(6)
+        );
+        strictly_before!(
+            ContinuousRange::To(5),
             ContinuousRange::StartExclusive(5, 10)
         );
     }

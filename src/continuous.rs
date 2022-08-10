@@ -87,7 +87,10 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
                 },
                 other => other,
             },
-            Bound::Unbounded => Some(Ordering::Greater),
+            Bound::Unbounded => match other_side {
+                BoundSide::Start => Some(Ordering::Greater), // -Inf
+                BoundSide::End => Some(Ordering::Less),      // +Inf
+            },
         },
         Bound::Excluded(this_value) => match other {
             Bound::Included(other_value) => match this_value.partial_cmp(other_value) {
@@ -99,13 +102,31 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
                 },
                 other => other,
             },
-            Bound::Excluded(other_value) => this_value.partial_cmp(other_value),
-            Bound::Unbounded => Some(Ordering::Greater),
+            Bound::Excluded(other_value) => match this_value.partial_cmp(other_value) {
+                Some(Ordering::Equal) => match (this_side, other_side) {
+                    (BoundSide::Start, BoundSide::Start) => Some(Ordering::Equal),
+                    (BoundSide::End, BoundSide::End) => Some(Ordering::Equal),
+                    (BoundSide::Start, BoundSide::End) => Some(Ordering::Greater),
+                    (BoundSide::End, BoundSide::Start) => Some(Ordering::Less),
+                },
+                other => other,
+            },
+            Bound::Unbounded => match other_side {
+                BoundSide::Start => Some(Ordering::Less),  // -Inf
+                BoundSide::End => Some(Ordering::Greater), // +Inf
+            },
         },
         Bound::Unbounded => match other {
-            Bound::Included(_) => Some(Ordering::Greater),
-            Bound::Excluded(_) => Some(Ordering::Greater),
-            Bound::Unbounded => Some(Ordering::Equal),
+            Bound::Included(_) | Bound::Excluded(_) => match this_side {
+                BoundSide::Start => Some(Ordering::Less),  // -Inf
+                BoundSide::End => Some(Ordering::Greater), // +Inf
+            },
+            Bound::Unbounded => match (this_side, other_side) {
+                (BoundSide::Start, BoundSide::Start) => Some(Ordering::Equal),
+                (BoundSide::End, BoundSide::End) => Some(Ordering::Equal),
+                (BoundSide::Start, BoundSide::End) => Some(Ordering::Less),
+                (BoundSide::End, BoundSide::Start) => Some(Ordering::Greater),
+            },
         },
     }
 }
@@ -328,6 +349,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     where
         Idx: std::fmt::Debug,
     {
+        println!("=== CMP");
         // Inspired by "Maintaining Knowledge about Temporal Intervals"
 
         // Empty ranges don't have bounds so we need to special case them before anything else
@@ -346,24 +368,39 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
         let cmp_end_start =
             partial_cmp_bounds(&self_end, BoundSide::End, &other_start, BoundSide::Start)?;
+        println!(
+            "cmp_end_start = self_end {:?} :: other_start {:?}=> {:?}",
+            self_end, other_start, cmp_end_start
+        );
 
-        println!("{:?} :: {:?}=> {:?}", self_end, other_start, cmp_end_start);
         if cmp_end_start == Ordering::Less {
             return Some(RangesRelation::StrictlyBefore);
         }
 
         let cmp_start_end =
             partial_cmp_bounds(&self_start, BoundSide::Start, &other_end, BoundSide::End)?;
+        println!(
+            "cmp_start_end = self_start {:?} :: other_end {:?}=> {:?}",
+            self_start, other_end, cmp_start_end
+        );
 
-        if cmp_start_end == Ordering::Less {
+        if cmp_start_end == Ordering::Greater {
             return Some(RangesRelation::StrictlyAfter);
         }
 
         let self_cmp =
             partial_cmp_bounds(&self_start, BoundSide::Start, &self_end, BoundSide::End)?;
+        println!(
+            "self_cmp = self_start {:?} :: self_end {:?}=> {:?}",
+            self_start, self_end, self_cmp
+        );
 
         let other_cmp =
             partial_cmp_bounds(&other_start, BoundSide::Start, &other_end, BoundSide::End)?;
+        println!(
+            "other_cmp = other_start {:?} :: other_end {:?}=> {:?}",
+            other_start, other_end, other_cmp
+        );
 
         if cmp_end_start == Ordering::Equal
             && self_cmp != Ordering::Equal
@@ -384,13 +421,24 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             &other_start,
             BoundSide::Start,
         )?;
+        println!(
+            "cmp_start_start = self_start {:?} :: other_start {:?}=> {:?}",
+            self_start, other_start, cmp_start_start
+        );
+
         let cmp_end_end =
             partial_cmp_bounds(&self_end, BoundSide::End, &other_end, BoundSide::End)?;
+        println!(
+            "cmp_end_end = self_end {:?} :: other_end {:?}=> {:?}",
+            self_end, other_end, cmp_end_end
+        );
 
         if cmp_start_start == Ordering::Less
             && cmp_end_start == Ordering::Greater
             && cmp_end_end == Ordering::Less
         {
+            // astart bstart
+            //                 aend bend
             return Some(RangesRelation::Overlaps);
         }
         if cmp_start_start == Ordering::Greater
