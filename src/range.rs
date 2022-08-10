@@ -197,18 +197,18 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
     }
 
     #[must_use]
-    pub fn difference(self, _other: Range<Idx>) -> Range<Idx> {
+    pub fn difference(self, _other: &Range<Idx>) -> Range<Idx> {
         todo!()
     }
 
     #[must_use]
-    pub fn overlaps(self, _other: Range<Idx>) -> bool {
+    pub fn overlaps(self, _other: &Range<Idx>) -> bool {
         todo!()
     }
 
     #[must_use]
     /// Compare the bounds of two ranges
-    pub fn compare_bounds(self, _other: Range<Idx>) -> RangesRelation {
+    pub fn compare_bounds(self, _other: &Range<Idx>) -> RangesRelation {
         // Inspired from "Maintaining Knowledge about Temporal Intervals"
         todo!()
     }
@@ -236,8 +236,7 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
     #[must_use]
     pub fn simplify(&self) -> Self
     where
-        Idx: PartialOrd,
-        Idx: Clone,
+        Idx: PartialOrd + Clone,
     {
         let mut clone = (*self).clone();
         clone.simplify_mut();
@@ -248,21 +247,20 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Continuous(r) => r.is_empty(),
-            Self::Composite(v) => v.iter().all(|x| x.is_empty()),
+            Self::Composite(v) => v.iter().all(ContinuousRange::is_empty),
         }
     }
 
     #[must_use]
     pub fn is_full(&self) -> bool
     where
-        Idx: PartialOrd,
-        Idx: Clone,
+        Idx: PartialOrd + Clone,
     {
         // We simplify to handle case that are complex but represent the full
         // range when simplified like (-inf, 0]; [0, +Inf)
         match self.simplify() {
             Self::Continuous(r) => r.is_full(),
-            Self::Composite(v) => v.iter().any(|x| x.is_full()),
+            Self::Composite(v) => v.iter().any(ContinuousRange::is_full),
         }
     }
 }
@@ -279,7 +277,7 @@ impl<Idx: PartialOrd + Clone> Sub<Range<Idx>> for Range<Idx> {
     type Output = Range<Idx>;
 
     fn sub(self, other: Range<Idx>) -> Range<Idx> {
-        self.difference(other)
+        self.difference(&other)
     }
 }
 

@@ -124,7 +124,7 @@ mod test_from_stdlib {
 
     #[test]
     pub fn default() {
-        let r: ContinuousRange<i32> = Default::default();
+        let r: ContinuousRange<i32> = ContinuousRange::default();
         assert_matches!(r, ContinuousRange::Empty);
     }
 
@@ -1034,18 +1034,9 @@ mod test_compare {
             ContinuousRange::EndExclusive(2, 10)
         );
 
-        strictly_contains!(
-            ContinuousRange::From(0),
-            ContinuousRange::Inclusive(2, 10)
-        );
-        strictly_contains!(
-            ContinuousRange::From(0),
-            ContinuousRange::Exclusive(2, 10)
-        );
-        strictly_contains!(
-            ContinuousRange::From(0),
-            ContinuousRange::Exclusive(0, 10)
-        );
+        strictly_contains!(ContinuousRange::From(0), ContinuousRange::Inclusive(2, 10));
+        strictly_contains!(ContinuousRange::From(0), ContinuousRange::Exclusive(2, 10));
+        strictly_contains!(ContinuousRange::From(0), ContinuousRange::Exclusive(0, 10));
         strictly_contains!(
             ContinuousRange::From(0),
             ContinuousRange::StartExclusive(2, 10)
@@ -1059,18 +1050,9 @@ mod test_compare {
             ContinuousRange::EndExclusive(2, 10)
         );
 
-        strictly_contains!(
-            ContinuousRange::To(20),
-            ContinuousRange::Inclusive(0, 19)
-        );
-        strictly_contains!(
-            ContinuousRange::To(20),
-            ContinuousRange::Exclusive(0, 19)
-        );
-        strictly_contains!(
-            ContinuousRange::To(20),
-            ContinuousRange::Exclusive(0, 20)
-        );
+        strictly_contains!(ContinuousRange::To(20), ContinuousRange::Inclusive(0, 19));
+        strictly_contains!(ContinuousRange::To(20), ContinuousRange::Exclusive(0, 19));
+        strictly_contains!(ContinuousRange::To(20), ContinuousRange::Exclusive(0, 20));
         strictly_contains!(
             ContinuousRange::To(20),
             ContinuousRange::StartExclusive(0, 19)
@@ -1084,6 +1066,4 @@ mod test_compare {
             ContinuousRange::EndExclusive(0, 20)
         );
     }
-
-
 }

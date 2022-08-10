@@ -112,8 +112,8 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
                 other => other,
             },
             Bound::Unbounded => match other_side {
-                BoundSide::Start => Some(Ordering::Greater),  // -Inf
-                BoundSide::End => Some(Ordering::Less), // +Inf
+                BoundSide::Start => Some(Ordering::Greater), // -Inf
+                BoundSide::End => Some(Ordering::Less),      // +Inf
             },
         },
         Bound::Unbounded => match other {
@@ -529,16 +529,16 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
             // bounded ranges with inverted bounds are considered empty
             Self::Inclusive(start, end) => start > end,
-            Self::Exclusive(start, end) => start >= end,
-            Self::StartExclusive(start, end) => start >= end,
-            Self::EndExclusive(start, end) => start >= end,
+            Self::Exclusive(start, end)
+            | Self::StartExclusive(start, end)
+            | Self::EndExclusive(start, end) => start >= end,
 
             // unbounded ranges can't be empty
-            Self::From(_) => false,
-            Self::FromExclusive(_) => false,
-            Self::To(_) => false,
-            Self::ToExclusive(_) => false,
-            Self::Full => false,
+            Self::From(_)
+            | Self::FromExclusive(_)
+            | Self::To(_)
+            | Self::ToExclusive(_)
+            | Self::Full => false,
         }
     }
 

@@ -106,6 +106,7 @@ pub enum RangesRelation {
 }
 
 impl RangesRelation {
+    #[must_use]
     pub fn intersects(&self) -> bool {
         match self {
             RangesRelation::StrictlyBefore | RangesRelation::StrictlyAfter => false,
