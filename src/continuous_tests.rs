@@ -816,6 +816,40 @@ mod test_contains {
     }
 
     #[test]
+    pub fn from() {
+        let r = ContinuousRange::From(5);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(5), true);
+        assert_eq!(r.contains(10), true);
+    }
+
+    #[test]
+    pub fn from_exclusive() {
+        let r = ContinuousRange::FromExclusive(5);
+        assert_eq!(r.contains(0), false);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(6), true);
+        assert_eq!(r.contains(10), true);
+    }
+
+    #[test]
+    pub fn to() {
+        let r = ContinuousRange::To(5);
+        assert_eq!(r.contains(0), true);
+        assert_eq!(r.contains(5), true);
+        assert_eq!(r.contains(10), false);
+    }
+
+    #[test]
+    pub fn to_exclusive() {
+        let r = ContinuousRange::ToExclusive(5);
+        assert_eq!(r.contains(0), true);
+        assert_eq!(r.contains(4), true);
+        assert_eq!(r.contains(5), false);
+        assert_eq!(r.contains(10), false);
+    }
+
+    #[test]
     pub fn full() {
         let r = ContinuousRange::<i32>::Full;
         assert_eq!(r.contains(-500), true);
