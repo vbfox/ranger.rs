@@ -1098,28 +1098,19 @@ mod test_compare {
             ContinuousRange::Exclusive(9, 11)
         );
 
-        overlaps!(
-            ContinuousRange::To(10),
-            ContinuousRange::Inclusive(5, 20)
-        );
+        overlaps!(ContinuousRange::To(10), ContinuousRange::Inclusive(5, 20));
         overlaps!(
             ContinuousRange::ToExclusive(10),
             ContinuousRange::Inclusive(5, 20)
         );
 
-        overlaps!(
-            ContinuousRange::Inclusive(0, 10),
-            ContinuousRange::From(5)
-        );
+        overlaps!(ContinuousRange::Inclusive(0, 10), ContinuousRange::From(5));
         overlaps!(
             ContinuousRange::Inclusive(0, 10),
             ContinuousRange::FromExclusive(5)
         );
 
-        overlaps!(
-            ContinuousRange::To(10),
-            ContinuousRange::From(5)
-        );
+        overlaps!(ContinuousRange::To(10), ContinuousRange::From(5));
     }
 
     #[test]
@@ -1200,6 +1191,64 @@ mod test_compare {
         finishes!(
             ContinuousRange::Exclusive(10, 20),
             ContinuousRange::EndExclusive(0, 20)
+        );
+    }
+}
+
+mod test_union {
+    use crate::ContinuousRange;
+
+    macro_rules! union {
+        ($a:expr, $b:expr, $c:expr) => {
+            assert_eq!($a.union(&$b), $c);
+        };
+    }
+
+    #[test]
+    pub fn empty() {
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Empty,
+            Some(ContinuousRange::Inclusive(10, 20))
+        );
+        union!(
+            ContinuousRange::Empty,
+            ContinuousRange::Inclusive(10, 20),
+            Some(ContinuousRange::Inclusive(10, 20))
+        );
+    }
+
+    #[test]
+    pub fn full() {
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Full,
+            Some(ContinuousRange::Full)
+        );
+        union!(
+            ContinuousRange::Full,
+            ContinuousRange::Inclusive(10, 20),
+            Some(ContinuousRange::Full)
+        );
+
+        union!(
+            ContinuousRange::<i32>::Full,
+            ContinuousRange::Empty,
+            Some(ContinuousRange::Full)
+        );
+        union!(
+            ContinuousRange::Empty,
+            ContinuousRange::<i32>::Full,
+            Some(ContinuousRange::Full)
+        );
+    }
+
+    #[test]
+    pub fn bounds() {
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(0, 15),
+            Some(ContinuousRange::Inclusive(0, 20))
         );
     }
 }
