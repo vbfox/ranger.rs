@@ -1066,4 +1066,140 @@ mod test_compare {
             ContinuousRange::EndExclusive(0, 20)
         );
     }
+
+    #[test]
+    pub fn overlaps_and_is_overlapped() {
+        macro_rules! overlaps {
+            ($a:expr, $b:expr) => {
+                compare!($a, $b, Some(RangesRelation::Overlaps));
+                compare!($b, $a, Some(RangesRelation::IsOverlapped));
+            };
+        }
+
+        overlaps!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::Inclusive(5, 20)
+        );
+        overlaps!(
+            ContinuousRange::Exclusive(0, 10),
+            ContinuousRange::Inclusive(5, 20)
+        );
+        overlaps!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::Exclusive(5, 20)
+        );
+        overlaps!(
+            ContinuousRange::Exclusive(0, 10),
+            ContinuousRange::Exclusive(5, 20)
+        );
+
+        overlaps!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::Exclusive(9, 11)
+        );
+
+        overlaps!(
+            ContinuousRange::To(10),
+            ContinuousRange::Inclusive(5, 20)
+        );
+        overlaps!(
+            ContinuousRange::ToExclusive(10),
+            ContinuousRange::Inclusive(5, 20)
+        );
+
+        overlaps!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::From(5)
+        );
+        overlaps!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::FromExclusive(5)
+        );
+
+        overlaps!(
+            ContinuousRange::To(10),
+            ContinuousRange::From(5)
+        );
+    }
+
+    #[test]
+    pub fn meet_and_is_met() {
+        macro_rules! meet {
+            ($a:expr, $b:expr) => {
+                compare!($a, $b, Some(RangesRelation::Meets));
+                compare!($b, $a, Some(RangesRelation::IsMet));
+            };
+        }
+
+        meet!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::Inclusive(10, 20)
+        );
+        meet!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::EndExclusive(10, 20)
+        );
+        meet!(
+            ContinuousRange::StartExclusive(0, 10),
+            ContinuousRange::Inclusive(10, 20)
+        );
+    }
+
+    #[test]
+    pub fn starts_and_is_started() {
+        macro_rules! starts {
+            ($a:expr, $b:expr) => {
+                compare!($a, $b, Some(RangesRelation::Starts));
+                compare!($b, $a, Some(RangesRelation::IsStarted));
+            };
+        }
+
+        starts!(
+            ContinuousRange::Inclusive(0, 10),
+            ContinuousRange::Inclusive(0, 20)
+        );
+        starts!(
+            ContinuousRange::EndExclusive(0, 10),
+            ContinuousRange::Inclusive(0, 20)
+        );
+
+        starts!(
+            ContinuousRange::Exclusive(0, 10),
+            ContinuousRange::Exclusive(0, 20)
+        );
+
+        starts!(
+            ContinuousRange::Exclusive(0, 10),
+            ContinuousRange::StartExclusive(0, 20)
+        );
+    }
+
+    #[test]
+    pub fn finishes_and_is_finished() {
+        macro_rules! finishes {
+            ($a:expr, $b:expr) => {
+                compare!($a, $b, Some(RangesRelation::Finishes));
+                compare!($b, $a, Some(RangesRelation::IsFinished));
+            };
+        }
+
+        finishes!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(0, 20)
+        );
+        finishes!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::StartExclusive(0, 20)
+        );
+
+        finishes!(
+            ContinuousRange::Exclusive(10, 20),
+            ContinuousRange::Exclusive(0, 20)
+        );
+
+        finishes!(
+            ContinuousRange::Exclusive(10, 20),
+            ContinuousRange::EndExclusive(0, 20)
+        );
+    }
 }
