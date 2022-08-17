@@ -485,7 +485,6 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     where
         Idx: std::fmt::Debug,
     {
-        println!("=== CMP");
         // Inspired by "Maintaining Knowledge about Temporal Intervals"
 
         // Empty ranges don't have bounds so we need to special case them before anything else
@@ -508,10 +507,6 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
         let cmp_end_start =
             partial_cmp_bounds(&self_end, BoundSide::End, &other_start, BoundSide::Start)?;
-        println!(
-            "cmp_end_start = self_end {:?} :: other_start {:?}=> {:?}",
-            self_end, other_start, cmp_end_start
-        );
 
         if cmp_end_start == Ordering::Less {
             return Some(RangesRelation::StrictlyBefore);
@@ -519,10 +514,6 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
         let cmp_start_end =
             partial_cmp_bounds(&self_start, BoundSide::Start, &other_end, BoundSide::End)?;
-        println!(
-            "cmp_start_end = self_start {:?} :: other_end {:?}=> {:?}",
-            self_start, other_end, cmp_start_end
-        );
 
         if cmp_start_end == Ordering::Greater {
             return Some(RangesRelation::StrictlyAfter);
@@ -530,17 +521,9 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
         let self_cmp =
             partial_cmp_bounds(&self_start, BoundSide::Start, &self_end, BoundSide::End)?;
-        println!(
-            "self_cmp = self_start {:?} :: self_end {:?}=> {:?}",
-            self_start, self_end, self_cmp
-        );
 
         let other_cmp =
             partial_cmp_bounds(&other_start, BoundSide::Start, &other_end, BoundSide::End)?;
-        println!(
-            "other_cmp = other_start {:?} :: other_end {:?}=> {:?}",
-            other_start, other_end, other_cmp
-        );
 
         if cmp_end_start == Ordering::Equal
             && self_cmp != Ordering::Equal
@@ -561,17 +544,9 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             &other_start,
             BoundSide::Start,
         )?;
-        println!(
-            "cmp_start_start = self_start {:?} :: other_start {:?}=> {:?}",
-            self_start, other_start, cmp_start_start
-        );
 
         let cmp_end_end =
             partial_cmp_bounds(&self_end, BoundSide::End, &other_end, BoundSide::End)?;
-        println!(
-            "cmp_end_end = self_end {:?} :: other_end {:?}=> {:?}",
-            self_end, other_end, cmp_end_end
-        );
 
         if cmp_start_start == Ordering::Less
             && cmp_end_start == Ordering::Greater
