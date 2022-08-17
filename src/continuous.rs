@@ -317,9 +317,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             Self::EndExclusive(start, _) => Some(Bound::Included(start)),
             Self::From(start) => Some(Bound::Included(start)),
             Self::FromExclusive(start) => Some(Bound::Excluded(start)),
-            Self::To(_) => Some(Bound::Unbounded),
-            Self::ToExclusive(_) => Some(Bound::Unbounded),
-            Self::Full => Some(Bound::Unbounded),
+            Self::To(_) | Self::ToExclusive(_) | Self::Full => Some(Bound::Unbounded),
         }
     }
 
@@ -332,11 +330,9 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             Self::Exclusive(_, end) => Some(Bound::Excluded(end)),
             Self::StartExclusive(_, end) => Some(Bound::Included(end)),
             Self::EndExclusive(_, end) => Some(Bound::Excluded(end)),
-            Self::From(_) => Some(Bound::Unbounded),
-            Self::FromExclusive(_) => Some(Bound::Unbounded),
             Self::To(end) => Some(Bound::Included(end)),
             Self::ToExclusive(end) => Some(Bound::Excluded(end)),
-            Self::Full => Some(Bound::Unbounded),
+            Self::From(_) | Self::FromExclusive(_) | Self::Full => Some(Bound::Unbounded),
         }
     }
 
@@ -503,8 +499,12 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             return None;
         }
 
-        let (self_start, self_end) = self.range_bounds().expect("Non-empty self should have bounds");
-        let (other_start, other_end) = other.range_bounds().expect("Non-empty other should have bounds");
+        let (self_start, self_end) = self
+            .range_bounds()
+            .expect("Non-empty self should have bounds");
+        let (other_start, other_end) = other
+            .range_bounds()
+            .expect("Non-empty other should have bounds");
 
         let cmp_end_start =
             partial_cmp_bounds(&self_end, BoundSide::End, &other_start, BoundSide::Start)?;
@@ -618,35 +618,27 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         Idx: PartialOrd,
     {
         match self {
-            ContinuousRange::Empty => {}
-            ContinuousRange::Single(_) => {}
             ContinuousRange::Inclusive(start, end) => {
                 if start == end {
-                    *self = ContinuousRange::Single(start.clone())
+                    *self = ContinuousRange::Single(start.clone());
                 } else if start > end {
-                    *self = ContinuousRange::Empty
+                    *self = ContinuousRange::Empty;
                 }
             }
-            ContinuousRange::Exclusive(start, end) => {
+            ContinuousRange::Exclusive(start, end)
+            | ContinuousRange::StartExclusive(start, end)
+            | ContinuousRange::EndExclusive(start, end) => {
                 if start >= end {
-                    *self = ContinuousRange::Empty
+                    *self = ContinuousRange::Empty;
                 }
             }
-            ContinuousRange::StartExclusive(start, end) => {
-                if start >= end {
-                    *self = ContinuousRange::Empty
-                }
-            }
-            ContinuousRange::EndExclusive(start, end) => {
-                if start >= end {
-                    *self = ContinuousRange::Empty
-                }
-            }
-            ContinuousRange::From(_) => {}
-            ContinuousRange::FromExclusive(_) => {}
-            ContinuousRange::To(_) => {}
-            ContinuousRange::ToExclusive(_) => {}
-            ContinuousRange::Full => {}
+            ContinuousRange::Empty
+            | ContinuousRange::Single(_)
+            | ContinuousRange::From(_)
+            | ContinuousRange::FromExclusive(_)
+            | ContinuousRange::To(_)
+            | ContinuousRange::ToExclusive(_)
+            | ContinuousRange::Full => {}
         }
     }
 
@@ -665,7 +657,6 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Empty => true,
-            Self::Single(_) => false,
 
             // bounded ranges with inverted bounds are considered empty
             Self::Inclusive(start, end) => start > end,
@@ -673,8 +664,10 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             | Self::StartExclusive(start, end)
             | Self::EndExclusive(start, end) => start >= end,
 
+            Self::Single(_)
+
             // unbounded ranges can't be empty
-            Self::From(_)
+            | Self::From(_)
             | Self::FromExclusive(_)
             | Self::To(_)
             | Self::ToExclusive(_)
