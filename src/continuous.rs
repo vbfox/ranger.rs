@@ -131,6 +131,14 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
     }
 }
 
+fn expect_bound<'a, Idx>(bound: Option<Bound<&'a Idx>>, msg: &'static str) -> &'a Idx {
+    match bound.expect(msg) {
+        Bound::Included(x) => x,
+        Bound::Excluded(x) => x,
+        Bound::Unbounded => panic!("{}", msg),
+    }
+}
+
 impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     /// A range containing no value
     ///
@@ -248,6 +256,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         ContinuousRange::Full
     }
 
+    /// Create a new range from the specified bounds
     #[must_use]
     pub fn from_bounds(bounds: (Bound<&Idx>, Bound<&Idx>)) -> Self {
         match bounds {
@@ -271,6 +280,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
     }
 
+    /// Get the bounds of the range or [None] if empty
     #[must_use]
     pub fn range_bounds(&self) -> Option<(Bound<&Idx>, Bound<&Idx>)> {
         match self {
@@ -296,6 +306,41 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
     }
 
+    #[must_use]
+    pub fn start(&self) -> Option<Bound<&Idx>> {
+        match self {
+            Self::Empty => None,
+            Self::Single(value) => Some(Bound::Included(value)),
+            Self::Inclusive(start, _) => Some(Bound::Included(start)),
+            Self::Exclusive(start, _) => Some(Bound::Excluded(start)),
+            Self::StartExclusive(start, _) => Some(Bound::Excluded(start)),
+            Self::EndExclusive(start, _) => Some(Bound::Included(start)),
+            Self::From(start) => Some(Bound::Included(start)),
+            Self::FromExclusive(start) => Some(Bound::Excluded(start)),
+            Self::To(_) => Some(Bound::Unbounded),
+            Self::ToExclusive(_) => Some(Bound::Unbounded),
+            Self::Full => Some(Bound::Unbounded),
+        }
+    }
+
+    #[must_use]
+    pub fn end(&self) -> Option<Bound<&Idx>> {
+        match self {
+            Self::Empty => None,
+            Self::Single(value) => Some(Bound::Included(value)),
+            Self::Inclusive(_, end) => Some(Bound::Included(end)),
+            Self::Exclusive(_, end) => Some(Bound::Excluded(end)),
+            Self::StartExclusive(_, end) => Some(Bound::Included(end)),
+            Self::EndExclusive(_, end) => Some(Bound::Excluded(end)),
+            Self::From(_) => Some(Bound::Unbounded),
+            Self::FromExclusive(_) => Some(Bound::Unbounded),
+            Self::To(end) => Some(Bound::Included(end)),
+            Self::ToExclusive(end) => Some(Bound::Excluded(end)),
+            Self::Full => Some(Bound::Unbounded),
+        }
+    }
+
+    /// Check if the range contains the provide value
     #[must_use]
     pub fn contains(&self, value: impl Borrow<Idx>) -> bool
     where
@@ -328,7 +373,6 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
     }
 
-    // TODO: Can I have a Cow with a composite lifetime 'c for the Cow that is 'a (self) + 'b (other) ?
     #[must_use]
     pub fn union(&self, other: &ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>>
     where
@@ -337,28 +381,28 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         match (self, other) {
             (ContinuousRange::Empty, r) | (r, ContinuousRange::Empty) => Some(r.clone()),
             (ContinuousRange::Full, _) | (_, ContinuousRange::Full) => Some(ContinuousRange::Full),
-            (_r1, _r2) => match self.compare(other) {
+            _ => match self.compare(other) {
                 Some(cmp) => match cmp {
                     RangesRelation::StrictlyBefore => None,
                     RangesRelation::StrictlyAfter => None,
                     RangesRelation::Meets => {
-                        let (start, _) = self.range_bounds().expect("Self meets without bounds");
-                        let (_, end) = other.range_bounds().expect("Other meets without bounds");
+                        let start = self.start().expect("Self meets without bounds");
+                        let end = other.end().expect("Other meets without bounds");
                         Some(ContinuousRange::from_bounds((start, end)))
                     }
                     RangesRelation::IsMet => {
-                        let (_, end) = self.range_bounds().expect("Self meets without bounds");
-                        let (start, _) = other.range_bounds().expect("Other meets without bounds");
+                        let end = self.end().expect("Self meets without bounds");
+                        let start = other.start().expect("Other meets without bounds");
                         Some(ContinuousRange::from_bounds((start, end)))
                     }
                     RangesRelation::Overlaps => {
-                        let (start, _) = self.range_bounds().expect("Self meets without bounds");
-                        let (_, end) = other.range_bounds().expect("Other meets without bounds");
+                        let start = self.start().expect("Self meets without bounds");
+                        let end = other.end().expect("Other meets without bounds");
                         Some(ContinuousRange::from_bounds((start, end)))
                     }
                     RangesRelation::IsOverlapped => {
-                        let (_, end) = self.range_bounds().expect("Self meets without bounds");
-                        let (start, _) = other.range_bounds().expect("Other meets without bounds");
+                        let end = self.end().expect("Self meets without bounds");
+                        let start = other.start().expect("Other meets without bounds");
                         Some(ContinuousRange::from_bounds((start, end)))
                     }
                     RangesRelation::Starts => Some(other.clone()),
@@ -375,8 +419,47 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
-    pub fn intersection(self, _other: ContinuousRange<Idx>) -> ContinuousRange<Idx> {
-        todo!()
+    pub fn intersection(&self, other: &ContinuousRange<Idx>) -> ContinuousRange<Idx>
+    where
+        Idx: PartialOrd + std::fmt::Debug,
+    {
+        match (self, other) {
+            (ContinuousRange::Empty, _) | (_, ContinuousRange::Empty) => ContinuousRange::Empty,
+            (ContinuousRange::Full, r) | (r, ContinuousRange::Full) => r.clone(),
+            _ => match self.compare(other) {
+                Some(cmp) => match cmp {
+                    RangesRelation::StrictlyBefore => ContinuousRange::Empty,
+                    RangesRelation::StrictlyAfter => ContinuousRange::Empty,
+                    RangesRelation::Meets => {
+                        let end = expect_bound(self.end(), "Self meets without end bound");
+                        ContinuousRange::single(end.clone())
+                    }
+                    RangesRelation::IsMet => {
+                        let start = expect_bound(self.end(), "Self is met without start bound");
+                        ContinuousRange::single(start.clone())
+                    }
+                    RangesRelation::Overlaps => {
+                        let (_, end) = self.range_bounds().expect("Self meets without bounds");
+                        let (start, _) = other.range_bounds().expect("Other meets without bounds");
+                        ContinuousRange::from_bounds((start, end))
+                    }
+                    RangesRelation::IsOverlapped => {
+                        let (start, _) = self.range_bounds().expect("Self meets without bounds");
+                        let (_, end) = other.range_bounds().expect("Other meets without bounds");
+                        ContinuousRange::from_bounds((start, end))
+                    }
+                    RangesRelation::Starts => self.clone(),
+                    RangesRelation::IsStarted => other.clone(),
+
+                    RangesRelation::StrictlyContains => other.clone(),
+                    RangesRelation::IsStrictlyContained => self.clone(),
+                    RangesRelation::Finishes => self.clone(),
+                    RangesRelation::IsFinished => other.clone(),
+                    RangesRelation::Equal => self.clone(),
+                },
+                None => ContinuousRange::Empty,
+            },
+        }
     }
 
     #[must_use]
