@@ -503,8 +503,8 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             return None;
         }
 
-        let (self_start, self_end) = self.range_bounds().unwrap();
-        let (other_start, other_end) = other.range_bounds().unwrap();
+        let (self_start, self_end) = self.range_bounds().expect("Non-empty self should have bounds");
+        let (other_start, other_end) = other.range_bounds().expect("Non-empty other should have bounds");
 
         let cmp_end_start =
             partial_cmp_bounds(&self_end, BoundSide::End, &other_start, BoundSide::Start)?;
