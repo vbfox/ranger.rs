@@ -51,7 +51,7 @@ fn stdlib_rangefull() {
 }
 
 fn composite() {
-    let r: Range<_> = Range::continuous(1, 2).union((5..=5).into());
+    let r: Range<_> = Range::continuous(1, 2).union(&(5..=5).into());
 
     println!("Range: {:?}", r);
     println!("Contains 1: {}", r.contains(1));

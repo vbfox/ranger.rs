@@ -176,7 +176,7 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
     }
 
     #[must_use]
-    pub fn union(self, other: Range<Idx>) -> Range<Idx>
+    pub fn union(&self, other: &Range<Idx>) -> Range<Idx>
     where
         Idx: PartialOrd,
     {
@@ -184,15 +184,15 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
         // TODO: Also maybe the ranges should be kept sorted in composite
         match (self, other) {
             (Self::Continuous(ContinuousRange::Empty), r)
-            | (r, Self::Continuous(ContinuousRange::Empty)) => r,
+            | (r, Self::Continuous(ContinuousRange::Empty)) => r.clone(),
             (Self::Continuous(ContinuousRange::Full), _)
             | (_, Self::Continuous(ContinuousRange::Full)) => Self::full(),
-            (r1, r2) => Range::composite(vec![r1, r2]),
+            (r1, r2) => Range::composite(vec![r1.clone(), r2.clone()]),
         }
     }
 
     #[must_use]
-    pub fn intersection(self, _other: Range<Idx>) -> Range<Idx> {
+    pub fn intersection(self, _other: &Range<Idx>) -> Range<Idx> {
         todo!()
     }
 
@@ -208,7 +208,7 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
 
     #[must_use]
     /// Compare the bounds of two ranges
-    pub fn compare_bounds(self, _other: &Range<Idx>) -> RangesRelation {
+    pub fn compare_bounds(&self, _other: &Range<Idx>) -> RangesRelation {
         // Inspired from "Maintaining Knowledge about Temporal Intervals"
         todo!()
     }
@@ -265,10 +265,10 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
     }
 }
 
-impl<Idx: PartialOrd + Clone> Add<Range<Idx>> for Range<Idx> {
+impl<Idx: PartialOrd + Clone> Add<&Range<Idx>> for Range<Idx> {
     type Output = Range<Idx>;
 
-    fn add(self, other: Range<Idx>) -> Range<Idx> {
+    fn add(self, other: &Range<Idx>) -> Range<Idx> {
         self.union(other)
     }
 }

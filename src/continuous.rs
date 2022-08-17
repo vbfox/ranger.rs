@@ -459,7 +459,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
-    pub fn difference(&self, _other: ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>> {
+    pub fn difference(&self, _other: &ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>> {
         todo!()
     }
 
@@ -489,11 +489,11 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
         // Empty ranges don't have bounds so we need to special case them before anything else
         if self.is_empty() {
-            if other.is_empty() {
-                return Some(RangesRelation::Equal);
+            return if other.is_empty() {
+                Some(RangesRelation::Equal)
             } else {
-                return None;
-            }
+                None
+            };
         } else if other.is_empty() {
             return None;
         }

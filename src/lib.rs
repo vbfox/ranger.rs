@@ -1,4 +1,5 @@
 #![allow(clippy::bool_assert_comparison)]
+#![allow(clippy::match_same_arms)]
 
 mod continuous;
 mod range;
