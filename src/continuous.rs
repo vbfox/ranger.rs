@@ -463,12 +463,12 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
-    pub fn difference(self, _other: ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>> {
+    pub fn difference(&self, _other: ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>> {
         todo!()
     }
 
     #[must_use]
-    pub fn intersects(self, other: &ContinuousRange<Idx>) -> bool
+    pub fn intersects(&self, other: &ContinuousRange<Idx>) -> bool
     where
         Idx: std::fmt::Debug,
     {
