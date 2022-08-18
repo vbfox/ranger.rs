@@ -131,11 +131,23 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
     }
 }
 
+/// Get the Internal value of a bound or panics if [Unbounded][Bound::Unbounded].
 fn expect_bound<'a, Idx>(bound: Option<Bound<&'a Idx>>, msg: &'static str) -> &'a Idx {
     match bound.expect(msg) {
         Bound::Included(x) => x,
         Bound::Excluded(x) => x,
         Bound::Unbounded => panic!("{}", msg),
+    }
+}
+
+/// Reverse a bound between [Bound::Included] and [Bound::Excluded].
+///
+/// [Bound::Unbounded] is kept as-is.
+fn reverse_bound<Idx>(bound: Bound<&Idx>) -> Bound<&Idx> {
+    match bound {
+        Bound::Included(x) => Bound::Excluded(x),
+        Bound::Excluded(x) => Bound::Included(x),
+        Bound::Unbounded => Bound::Unbounded,
     }
 }
 
@@ -435,13 +447,13 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
                         ContinuousRange::single(start.clone())
                     }
                     RangesRelation::Overlaps => {
-                        let (_, end) = self.range_bounds().expect("Self meets without bounds");
-                        let (start, _) = other.range_bounds().expect("Other meets without bounds");
+                        let (_, end) = self.range_bounds().expect("Self overlaps without bounds");
+                        let (start, _) = other.range_bounds().expect("Other is overlapped without bounds");
                         ContinuousRange::from_bounds((start, end))
                     }
                     RangesRelation::IsOverlapped => {
-                        let (start, _) = self.range_bounds().expect("Self meets without bounds");
-                        let (_, end) = other.range_bounds().expect("Other meets without bounds");
+                        let (start, _) = self.range_bounds().expect("Self is overlapped without bounds");
+                        let (_, end) = other.range_bounds().expect("Other overlaps without bounds");
                         ContinuousRange::from_bounds((start, end))
                     }
                     RangesRelation::Starts => self.clone(),
@@ -459,8 +471,61 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
-    pub fn difference(&self, _other: &ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>> {
-        todo!()
+    pub fn difference(&self, other: &ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>>
+    where
+        Idx: PartialOrd + std::fmt::Debug,
+    {
+        match (self, other) {
+            (ContinuousRange::Empty, r) => Some(r.clone()),
+            (_, ContinuousRange::Empty) => Some(ContinuousRange::Empty),
+            _ => match self.compare(other) {
+                Some(cmp) => match cmp {
+                    RangesRelation::StrictlyBefore => Some(self.clone()),
+                    RangesRelation::StrictlyAfter => Some(self.clone()),
+                    RangesRelation::Equal => Some(ContinuousRange::Empty),
+                    RangesRelation::IsStrictlyContained => Some(ContinuousRange::Empty),
+                    RangesRelation::StrictlyContains => None,
+
+                    RangesRelation::Meets => {
+                        let (start, end) = self.range_bounds().expect("Self meets without bounds");
+                        let end = reverse_bound(end);
+                        Some(ContinuousRange::from_bounds((start, end)))
+                    }
+                    RangesRelation::IsMet => {
+                        let (start, end) = self.range_bounds().expect("Self is met without bounds");
+                        let start = reverse_bound(start);
+                        Some(ContinuousRange::from_bounds((start, end)))
+                    }
+                    RangesRelation::Overlaps => {
+                        let start = self.start().expect("Self overlaps without bounds");
+                        let end = other.start().expect("Other is overlapped without bounds");
+                        let end = reverse_bound(end);
+                        Some(ContinuousRange::from_bounds((start, end)))
+                    }
+                    RangesRelation::IsOverlapped => {
+                        let end = self.end().expect("Self is overlapped without bounds");
+                        let start = other.end().expect("Other overlaps without bounds");
+                        let start = reverse_bound(start);
+                        Some(ContinuousRange::from_bounds((start, end)))
+                    }
+                    RangesRelation::Starts => Some(ContinuousRange::Empty),
+                    RangesRelation::IsStarted => {
+                        let end = self.end().expect("Self is overlapped without bounds");
+                        let start = other.end().expect("Other overlaps without bounds");
+                        let start = reverse_bound(start);
+                        Some(ContinuousRange::from_bounds((start, end)))
+                    }
+                    RangesRelation::Finishes => Some(ContinuousRange::Empty),
+                    RangesRelation::IsFinished => {
+                        let start = self.start().expect("Self overlaps without bounds");
+                        let end = other.start().expect("Other is overlapped without bounds");
+                        let end = reverse_bound(end);
+                        Some(ContinuousRange::from_bounds((start, end)))
+                    }
+                },
+                None => None,
+            },
+        }
     }
 
     #[must_use]
@@ -552,8 +617,6 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             && cmp_end_start == Ordering::Greater
             && cmp_end_end == Ordering::Less
         {
-            // astart bstart
-            //                 aend bend
             return Some(RangesRelation::Overlaps);
         }
         if cmp_start_start == Ordering::Greater
