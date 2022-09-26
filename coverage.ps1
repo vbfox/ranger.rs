@@ -14,21 +14,30 @@ if (Test-Path './target/coverage/') {
     Remove-Item './target/coverage/' -Recurse -Force
 }
 
-# Export the flags needed to instrument the program to collect code coverage.
-$env:RUSTFLAGS = "-Cinstrument-coverage"
+$savedRUSTFLAGS = $env:RUSTFLAGS
+$savedLLVM_PROFILE_FILE = $env:LLVM_PROFILE_FILE
 
-# Ensure each test runs gets its own profile information by defining the LLVM_PROFILE_FILE environment variable (%p will be replaced by the process ID, and %m by the binary signature):
-$env:LLVM_PROFILE_FILE = "target/coverage/ranger-%p-%m.profraw"
+try {
+    # Export the flags needed to instrument the program to collect code coverage.
+    $env:RUSTFLAGS = "-Cinstrument-coverage"
 
-# Build & test
-cargo build
-ThrowOnNativeFailure
+    # Ensure each test runs gets its own profile information by defining the LLVM_PROFILE_FILE environment variable (%p will be replaced by the process ID, and %m by the binary signature):
+    $env:LLVM_PROFILE_FILE = "target/coverage/ranger-%p-%m.profraw"
 
-cargo test $testName
-ThrowOnNativeFailure
+    # Build & test
+    cargo build
+    ThrowOnNativeFailure
 
-# Generate a HTML report in the coverage/ directory.
-grcov ./target/coverage/ --binary-path ./target/debug/ -s ./src/ -t html --branch --ignore-not-existing -o ./coverage/
-ThrowOnNativeFailure
+    cargo test $testName
+    ThrowOnNativeFailure
 
-Invoke-Item -Path 'coverage/index.html'
+    # Generate a HTML report in the coverage/ directory.
+    grcov ./target/coverage/ --binary-path ./target/debug/ -s ./src/ -t html --branch --ignore-not-existing -o ./coverage/
+    ThrowOnNativeFailure
+
+    Invoke-Item -Path 'coverage/index.html'
+}
+finally {
+    $env:RUSTFLAGS = $savedRUSTFLAGS
+    $env:LLVM_PROFILE_FILE = $savedLLVM_PROFILE_FILE
+}
