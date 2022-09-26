@@ -1244,15 +1244,6 @@ mod test_union {
     }
 
     #[test]
-    pub fn bounds() {
-        union!(
-            ContinuousRange::Inclusive(10, 20),
-            ContinuousRange::Inclusive(0, 15),
-            Some(ContinuousRange::Inclusive(0, 20))
-        );
-    }
-
-    #[test]
     pub fn strictly_before() {
         union!(
             ContinuousRange::Inclusive(10, 20),
@@ -1290,12 +1281,12 @@ mod test_union {
         );
         union!(
             ContinuousRange::Inclusive(10, 20),
-            ContinuousRange::EndExclusive (15, 100),
+            ContinuousRange::EndExclusive(15, 100),
             Some(ContinuousRange::EndExclusive(10, 100))
         );
         union!(
             ContinuousRange::StartExclusive(10, 20),
-            ContinuousRange::EndExclusive (15, 100),
+            ContinuousRange::EndExclusive(15, 100),
             Some(ContinuousRange::Exclusive(10, 100))
         );
     }
@@ -1491,3 +1482,213 @@ mod test_start_end {
     }
 }
 
+mod test_intersection {
+    use crate::ContinuousRange;
+
+    macro_rules! intersection {
+        ($a:expr, $b:expr, $c:expr) => {
+            assert_eq!($a.intersection(&$b), $c);
+        };
+    }
+
+    #[test]
+    pub fn empty() {
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Empty,
+            ContinuousRange::Empty
+        );
+        intersection!(
+            ContinuousRange::Empty,
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Empty
+        );
+    }
+
+    #[test]
+    pub fn full() {
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Full,
+            ContinuousRange::Inclusive(10, 20)
+        );
+        intersection!(
+            ContinuousRange::Full,
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(10, 20)
+        );
+
+        intersection!(
+            ContinuousRange::<i32>::Full,
+            ContinuousRange::Empty,
+            ContinuousRange::Empty
+        );
+        intersection!(
+            ContinuousRange::Empty,
+            ContinuousRange::<i32>::Full,
+            ContinuousRange::Empty
+        );
+    }
+
+    #[test]
+    pub fn strictly_before() {
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(42, 100),
+            ContinuousRange::Empty
+        );
+    }
+
+    #[test]
+    pub fn strictly_after() {
+        intersection!(
+            ContinuousRange::Inclusive(42, 100),
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Empty
+        );
+    }
+
+    #[test]
+    pub fn overlaps_and_is_overlapped() {
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(15, 100),
+            ContinuousRange::Inclusive(15, 20)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(15, 100),
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(15, 20)
+        );
+
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Exclusive(15, 100),
+            ContinuousRange::StartExclusive(15, 20)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::EndExclusive(15, 100),
+            ContinuousRange::Inclusive(15, 20)
+        );
+        intersection!(
+            ContinuousRange::EndExclusive(10, 20),
+            ContinuousRange::StartExclusive(15, 100),
+            ContinuousRange::Exclusive(15, 20)
+        );
+    }
+
+    #[test]
+    pub fn meets_and_is_met() {
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(20, 100),
+            ContinuousRange::Single(20)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(20, 100),
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Single(20)
+        );
+
+        intersection!(
+            ContinuousRange::StartExclusive(10, 20),
+            ContinuousRange::Inclusive(20, 100),
+            ContinuousRange::Single(20)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::EndExclusive(20, 100),
+            ContinuousRange::Single(20)
+        );
+        intersection!(
+            ContinuousRange::StartExclusive(10, 20),
+            ContinuousRange::EndExclusive(20, 100),
+            ContinuousRange::Single(20)
+        );
+    }
+
+    #[test]
+    pub fn starts_and_is_started() {
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(10, 100),
+            ContinuousRange::Inclusive(10, 20)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(10, 100),
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(10, 20)
+        );
+
+        intersection!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::From(10),
+            ContinuousRange::Inclusive(10, 20)
+        );
+    }
+
+    #[test]
+    pub fn finishes_and_is_finished() {
+        intersection!(
+            ContinuousRange::Inclusive(99, 100),
+            ContinuousRange::Inclusive(10, 100),
+            ContinuousRange::Inclusive(99, 100)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(10, 100),
+            ContinuousRange::Inclusive(99, 100),
+            ContinuousRange::Inclusive(99, 100)
+        );
+
+        intersection!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::To(10),
+            ContinuousRange::Inclusive(5, 10)
+        );
+    }
+
+    #[test]
+    pub fn contains_and_is_contained() {
+        intersection!(
+            ContinuousRange::Inclusive(0, 100),
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::Inclusive(5, 10)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::Inclusive(0, 100),
+            ContinuousRange::Inclusive(5, 10)
+        );
+
+        intersection!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::From(0),
+            ContinuousRange::Inclusive(5, 10)
+        );
+        intersection!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::To(100),
+            ContinuousRange::Inclusive(5, 10)
+        );
+    }
+
+    #[test]
+    pub fn equal() {
+        intersection!(
+            ContinuousRange::Inclusive(0, 100),
+            ContinuousRange::Inclusive(0, 100),
+            ContinuousRange::Inclusive(0, 100)
+        );
+        intersection!(
+            ContinuousRange::From(5),
+            ContinuousRange::From(5),
+            ContinuousRange::From(5)
+        );
+        intersection!(
+            ContinuousRange::To(5),
+            ContinuousRange::To(5),
+            ContinuousRange::To(5)
+        );
+    }
+}

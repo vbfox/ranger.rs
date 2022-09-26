@@ -443,7 +443,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
                         ContinuousRange::single(end.clone())
                     }
                     RangesRelation::IsMet => {
-                        let start = expect_bound(self.end(), "Self is met without start bound");
+                        let start = expect_bound(self.start(), "Self is met without start bound");
                         ContinuousRange::single(start.clone())
                     }
                     RangesRelation::Overlaps => {
