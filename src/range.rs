@@ -141,11 +141,15 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
                 let mut new_items = vec![];
 
                 for item in iter {
+                    if item.is_empty() {
+                        continue;
+                    }
+
+                    if item.is_full()  {
+                        return item;
+                    }
+
                     match item {
-                        r if r.is_empty() => continue,
-                        r if r.is_full() => {
-                            return r;
-                        }
                         Self::Composite(v) => {
                             new_items.extend(v);
                         }
