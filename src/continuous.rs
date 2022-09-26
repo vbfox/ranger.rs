@@ -448,11 +448,15 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
                     }
                     RangesRelation::Overlaps => {
                         let (_, end) = self.range_bounds().expect("Self overlaps without bounds");
-                        let (start, _) = other.range_bounds().expect("Other is overlapped without bounds");
+                        let (start, _) = other
+                            .range_bounds()
+                            .expect("Other is overlapped without bounds");
                         ContinuousRange::from_bounds((start, end))
                     }
                     RangesRelation::IsOverlapped => {
-                        let (start, _) = self.range_bounds().expect("Self is overlapped without bounds");
+                        let (start, _) = self
+                            .range_bounds()
+                            .expect("Self is overlapped without bounds");
                         let (_, end) = other.range_bounds().expect("Other overlaps without bounds");
                         ContinuousRange::from_bounds((start, end))
                     }
@@ -550,7 +554,8 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     where
         Idx: std::fmt::Debug,
     {
-        // Inspired by "Maintaining Knowledge about Temporal Intervals"
+        // Inspired by "Maintaining Knowledge about Temporal Intervals" by James F. Allen
+        // Communications of the ACM - November 1983 - Volume 26 - Number 11
 
         // Empty ranges don't have bounds so we need to special case them before anything else
         if self.is_empty() {
@@ -648,7 +653,12 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
         }
 
         // Should be unreachable if PartialOrd contract is correctly implemented
-        None
+        panic!(
+            r#"PartialOrd contract isn't correctly implemented.
+No ordering can be found between {self:?} and {other:?}"#,
+            self = &self,
+            other = &other
+        );
     }
 
     pub fn simplify_mut(&mut self)

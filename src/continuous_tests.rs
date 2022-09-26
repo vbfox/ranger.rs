@@ -1251,4 +1251,243 @@ mod test_union {
             Some(ContinuousRange::Inclusive(0, 20))
         );
     }
+
+    #[test]
+    pub fn strictly_before() {
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(42, 100),
+            None
+        );
+    }
+
+    #[test]
+    pub fn strictly_after() {
+        union!(
+            ContinuousRange::Inclusive(42, 100),
+            ContinuousRange::Inclusive(10, 20),
+            None
+        );
+    }
+
+    #[test]
+    pub fn overlaps_and_is_overlapped() {
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(15, 100),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::Inclusive(15, 100),
+            ContinuousRange::Inclusive(10, 20),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Exclusive(15, 100),
+            Some(ContinuousRange::EndExclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::EndExclusive (15, 100),
+            Some(ContinuousRange::EndExclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::StartExclusive(10, 20),
+            ContinuousRange::EndExclusive (15, 100),
+            Some(ContinuousRange::Exclusive(10, 100))
+        );
+    }
+
+    #[test]
+    pub fn meets_and_is_met() {
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(20, 100),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::Inclusive(20, 100),
+            ContinuousRange::Inclusive(10, 20),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+
+        union!(
+            ContinuousRange::StartExclusive(10, 20),
+            ContinuousRange::Inclusive(20, 100),
+            Some(ContinuousRange::StartExclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::EndExclusive(20, 100),
+            Some(ContinuousRange::EndExclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::StartExclusive(10, 20),
+            ContinuousRange::EndExclusive(20, 100),
+            Some(ContinuousRange::Exclusive(10, 100))
+        );
+    }
+
+    #[test]
+    pub fn starts_and_is_started() {
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::Inclusive(10, 100),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::Inclusive(10, 100),
+            ContinuousRange::Inclusive(10, 20),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+
+        union!(
+            ContinuousRange::Inclusive(10, 20),
+            ContinuousRange::From(10),
+            Some(ContinuousRange::From(10))
+        );
+    }
+
+    #[test]
+    pub fn finishes_and_is_finished() {
+        union!(
+            ContinuousRange::Inclusive(99, 100),
+            ContinuousRange::Inclusive(10, 100),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+        union!(
+            ContinuousRange::Inclusive(10, 100),
+            ContinuousRange::Inclusive(99, 100),
+            Some(ContinuousRange::Inclusive(10, 100))
+        );
+
+        union!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::To(10),
+            Some(ContinuousRange::To(10))
+        );
+    }
+
+    #[test]
+    pub fn contains_and_is_contained() {
+        union!(
+            ContinuousRange::Inclusive(0, 100),
+            ContinuousRange::Inclusive(5, 10),
+            Some(ContinuousRange::Inclusive(0, 100))
+        );
+        union!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::Inclusive(0, 100),
+            Some(ContinuousRange::Inclusive(0, 100))
+        );
+
+        union!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::From(0),
+            Some(ContinuousRange::From(0))
+        );
+        union!(
+            ContinuousRange::Inclusive(5, 10),
+            ContinuousRange::To(100),
+            Some(ContinuousRange::To(100))
+        );
+    }
+
+    #[test]
+    pub fn equal() {
+        union!(
+            ContinuousRange::Inclusive(0, 100),
+            ContinuousRange::Inclusive(0, 100),
+            Some(ContinuousRange::Inclusive(0, 100))
+        );
+        union!(
+            ContinuousRange::From(5),
+            ContinuousRange::From(5),
+            Some(ContinuousRange::From(5))
+        );
+        union!(
+            ContinuousRange::To(5),
+            ContinuousRange::To(5),
+            Some(ContinuousRange::To(5))
+        );
+    }
 }
+
+mod test_start_end {
+    use std::ops::Bound;
+
+    use crate::ContinuousRange;
+
+    #[test]
+    pub fn empty() {
+        let r = ContinuousRange::<i32>::Empty;
+        assert_eq!(r.start(), None);
+        assert_eq!(r.end(), None);
+    }
+
+    #[test]
+    pub fn single() {
+        let r = ContinuousRange::Single(42);
+        assert_eq!(r.start(), Some(Bound::Included(&42)));
+        assert_eq!(r.end(), Some(Bound::Included(&42)));
+    }
+
+    #[test]
+    pub fn inclusive() {
+        let r = ContinuousRange::Inclusive(0, 42);
+        assert_eq!(r.start(), Some(Bound::Included(&0)));
+        assert_eq!(r.end(), Some(Bound::Included(&42)));
+    }
+
+    #[test]
+    pub fn exclusive() {
+        let r = ContinuousRange::Exclusive(0, 42);
+        assert_eq!(r.start(), Some(Bound::Excluded(&0)));
+        assert_eq!(r.end(), Some(Bound::Excluded(&42)));
+    }
+
+    #[test]
+    pub fn start_exclusive() {
+        let r = ContinuousRange::StartExclusive(0, 42);
+        assert_eq!(r.start(), Some(Bound::Excluded(&0)));
+        assert_eq!(r.end(), Some(Bound::Included(&42)));
+    }
+
+    #[test]
+    pub fn end_exclusive() {
+        let r = ContinuousRange::EndExclusive(0, 42);
+        assert_eq!(r.start(), Some(Bound::Included(&0)));
+        assert_eq!(r.end(), Some(Bound::Excluded(&42)));
+    }
+
+    #[test]
+    pub fn from() {
+        let r = ContinuousRange::From(42);
+        assert_eq!(r.start(), Some(Bound::Included(&42)));
+        assert_eq!(r.end(), Some(Bound::Unbounded));
+    }
+
+    #[test]
+    pub fn from_exclusive() {
+        let r = ContinuousRange::FromExclusive(42);
+        assert_eq!(r.start(), Some(Bound::Excluded(&42)));
+        assert_eq!(r.end(), Some(Bound::Unbounded));
+    }
+
+    #[test]
+    pub fn to() {
+        let r = ContinuousRange::To(42);
+        assert_eq!(r.start(), Some(Bound::Unbounded));
+        assert_eq!(r.end(), Some(Bound::Included(&42)));
+    }
+
+    #[test]
+    pub fn to_exclusive() {
+        let r = ContinuousRange::ToExclusive(42);
+        assert_eq!(r.start(), Some(Bound::Unbounded));
+        assert_eq!(r.end(), Some(Bound::Excluded(&42)));
+    }
+}
+
