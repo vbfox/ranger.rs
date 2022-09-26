@@ -1,4 +1,7 @@
+param ([String] $testName="")
+
 Set-StrictMode -Version Latest
+
 $ErrorActionPreference = "Stop"
 function ThrowOnNativeFailure {
     if (-not $?)
@@ -7,7 +10,9 @@ function ThrowOnNativeFailure {
     }
 }
 
-# Remove-Item 'target' -Recurse
+if (Test-Path './target/coverage/') {
+    Remove-Item './target/coverage/' -Recurse -Force
+}
 
 # Export the flags needed to instrument the program to collect code coverage.
 $env:RUSTFLAGS = "-Cinstrument-coverage"
@@ -19,7 +24,7 @@ $env:LLVM_PROFILE_FILE = "target/coverage/ranger-%p-%m.profraw"
 cargo build
 ThrowOnNativeFailure
 
-cargo test
+cargo test $testName
 ThrowOnNativeFailure
 
 # Generate a HTML report in the coverage/ directory.
