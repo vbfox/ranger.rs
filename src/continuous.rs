@@ -140,9 +140,9 @@ fn expect_bound<'a, Idx>(bound: Option<Bound<&'a Idx>>, msg: &'static str) -> &'
     }
 }
 
-/// Reverse a bound between [Bound::Included] and [Bound::Excluded].
+/// Reverse a bound between [`Bound::Included`] and [`Bound::Excluded`].
 ///
-/// [Bound::Unbounded] is kept as-is.
+/// [`Bound::Unbounded`] is kept as-is.
 fn reverse_bound<Idx>(bound: Bound<&Idx>) -> Bound<&Idx> {
     match bound {
         Bound::Included(x) => Bound::Excluded(x),
@@ -550,6 +550,10 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
     #[must_use]
     /// Compare the bounds of two ranges
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if the [`PartialOrd`] contract isn't respected.
     pub fn compare(&self, other: &ContinuousRange<Idx>) -> Option<RangesRelation>
     where
         Idx: std::fmt::Debug,
@@ -694,7 +698,6 @@ No ordering can be found between {self:?} and {other:?}"#,
     pub fn simplify(&self) -> Self
     where
         Idx: PartialOrd,
-        Idx: Clone,
     {
         let mut clone = (*self).clone();
         clone.simplify_mut();

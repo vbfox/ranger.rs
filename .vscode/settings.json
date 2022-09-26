@@ -2,4 +2,8 @@
     "rust-analyzer.server.extraEnv": {
         "CARGO_TARGET_DIR": "target/rust-analyzer"
     },
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "rust-analyzer.checkOnSave.extraArgs": [
+        "--tests", "--benches", "--", "-Dclippy::all", "-Dclippy::pedantic"
+    ]
 }

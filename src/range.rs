@@ -1,3 +1,5 @@
+#![allow(clippy::missing_panics_doc, clippy::unused_self)]
+
 use std::{
     borrow::Borrow,
     fmt,
@@ -145,7 +147,7 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
                         continue;
                     }
 
-                    if item.is_full()  {
+                    if item.is_full() {
                         return item;
                     }
 
