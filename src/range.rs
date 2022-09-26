@@ -6,6 +6,15 @@ use std::{
 
 use crate::{ContinuousRange, RangesRelation};
 
+macro_rules! todo {
+    () => {
+        panic!("not yet implemented")
+    };
+    ($($arg:tt)+) => {
+        panic!("not yet implemented: {}", $crate::format_args!($($arg)+))
+    };
+}
+
 #[derive(Clone, Hash, PartialEq)]
 pub enum Range<Idx> {
     Continuous(ContinuousRange<Idx>),
