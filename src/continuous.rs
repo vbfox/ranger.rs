@@ -7,6 +7,7 @@ use std::{
 
 use crate::RangesRelation;
 
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Hash, PartialEq)]
 pub enum ContinuousRange<Idx> {
     /// A range containing no value

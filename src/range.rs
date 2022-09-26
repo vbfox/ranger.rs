@@ -17,6 +17,7 @@ macro_rules! todo {
     };
 }
 
+#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Hash, PartialEq)]
 pub enum Range<Idx> {
     Continuous(ContinuousRange<Idx>),
