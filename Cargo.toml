@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Julien Roncaglia <julien@roncaglia.fr>"]
 edition = "2018"
 rust-version = "1.38"
+license = "MIT"
+description = "A range library"
 
 [dependencies]
 
