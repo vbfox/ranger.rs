@@ -383,6 +383,22 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
+    pub fn contains_range(&self, other: &ContinuousRange<Idx>) -> bool
+    where
+        Idx: std::fmt::Debug,
+    {
+        self.compare(other).map_or(false, |r| r.contains())
+    }
+
+    #[must_use]
+    pub fn disjoint_from_range(&self, other: &ContinuousRange<Idx>) -> bool
+    where
+        Idx: std::fmt::Debug,
+    {
+        self.compare(other).map_or(true, |r| r.disjoint())
+    }
+
+    #[must_use]
     pub fn union(&self, other: &ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>>
     where
         Idx: PartialOrd + std::fmt::Debug,
@@ -550,7 +566,8 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
-    /// Compare the bounds of two ranges
+    /// Compare the bounds of two ranges. Returns [`Option::None`] if an empty range is
+    /// compared to a non-empty range.
     ///
     /// # Panics
     ///
