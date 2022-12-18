@@ -1,6 +1,7 @@
 use std::{
     borrow::Borrow,
     cmp::Ordering,
+    convert::TryFrom,
     fmt,
     ops::{self, Bound},
 };
@@ -70,6 +71,81 @@ enum BoundSide {
     End,
 }
 
+/// An endpoint of a continuous range
+pub struct ContinuousBound<T>(Option<Bound<T>>);
+
+impl<T> ContinuousBound<T> {
+    /// Create a new bound
+    pub fn new(bound: Option<Bound<T>>) -> Self {
+        Self(bound)
+    }
+
+    /// Get the bound
+    pub fn bound(&self) -> Option<Bound<T>>
+    where
+        T: Copy,
+    {
+        self.0
+    }
+
+    pub fn into_inner(self) -> Option<Bound<T>> {
+        self.0
+    }
+
+    pub fn value(&self) -> Option<T>
+    where
+        T: Copy,
+    {
+        match &self.0 {
+            Some(Bound::Included(x)) | Some(Bound::Excluded(x)) => Some(*x),
+            _ => None,
+        }
+    }
+
+    pub fn unwrap(self) -> Bound<T> {
+        match self.0 {
+            Some(val) => val,
+            None => panic!("called `ContinuousBound::unwrap()` on a `None` value"),
+        }
+    }
+
+    pub fn expect(self, msg: &str) -> Bound<T> {
+        match self.0 {
+            Some(val) => val,
+            None => panic!("{}", msg),
+        }
+    }
+}
+
+impl<T> From<ContinuousBound<T>> for Option<Bound<T>> {
+    fn from(bound: ContinuousBound<T>) -> Self {
+        bound.0
+    }
+}
+
+impl<T> From<Option<Bound<T>>> for ContinuousBound<T> {
+    fn from(bound: Option<Bound<T>>) -> Self {
+        Self(bound)
+    }
+}
+
+impl<T> From<Bound<T>> for ContinuousBound<T> {
+    fn from(bound: Bound<T>) -> Self {
+        Self(Some(bound))
+    }
+}
+
+impl<T> TryFrom<ContinuousBound<T>> for Bound<T> {
+    type Error = ();
+
+    fn try_from(bound: ContinuousBound<T>) -> Result<Self, Self::Error> {
+        match bound.0 {
+            Some(val) => Ok(val),
+            None => Err(()),
+        }
+    }
+}
+
 fn partial_cmp_bounds<Idx: PartialOrd>(
     this: &Bound<&Idx>,
     this_side: BoundSide,
@@ -129,15 +205,6 @@ fn partial_cmp_bounds<Idx: PartialOrd>(
                 (BoundSide::End, BoundSide::Start) => Some(Ordering::Greater),
             },
         },
-    }
-}
-
-/// Get the Internal value of a bound or panics if [Unbounded][Bound::Unbounded].
-fn expect_bound<'a, Idx>(bound: Option<Bound<&'a Idx>>, msg: &'static str) -> &'a Idx {
-    match bound.expect(msg) {
-        Bound::Included(x) => x,
-        Bound::Excluded(x) => x,
-        Bound::Unbounded => panic!("{}", msg),
     }
 }
 
@@ -320,7 +387,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
-    pub fn start(&self) -> Option<Bound<&Idx>> {
+    pub fn start(&self) -> ContinuousBound<&Idx> {
         match self {
             Self::Empty => None,
             Self::Single(value) => Some(Bound::Included(value)),
@@ -332,10 +399,11 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             Self::FromExclusive(start) => Some(Bound::Excluded(start)),
             Self::To(_) | Self::ToExclusive(_) | Self::Full => Some(Bound::Unbounded),
         }
+        .into()
     }
 
     #[must_use]
-    pub fn end(&self) -> Option<Bound<&Idx>> {
+    pub fn end(&self) -> ContinuousBound<&Idx> {
         match self {
             Self::Empty => None,
             Self::Single(value) => Some(Bound::Included(value)),
@@ -347,6 +415,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
             Self::ToExclusive(end) => Some(Bound::Excluded(end)),
             Self::From(_) | Self::FromExclusive(_) | Self::Full => Some(Bound::Unbounded),
         }
+        .into()
     }
 
     /// Check if the range contains the provide value
@@ -395,8 +464,14 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
                     RangesRelation::StrictlyBefore => None,
                     RangesRelation::StrictlyAfter => None,
                     RangesRelation::Meets => {
-                        let start = self.start().expect("Self meets without bounds");
-                        let end = other.end().expect("Other meets without bounds");
+                        let start = self
+                            .start()
+                            .into_inner()
+                            .expect("Self meets without bounds");
+                        let end = other
+                            .end()
+                            .into_inner()
+                            .expect("Other meets without bounds");
                         Some(ContinuousRange::from_bounds((start, end)))
                     }
                     RangesRelation::IsMet => {
@@ -440,11 +515,14 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
                     RangesRelation::StrictlyBefore => ContinuousRange::Empty,
                     RangesRelation::StrictlyAfter => ContinuousRange::Empty,
                     RangesRelation::Meets => {
-                        let end = expect_bound(self.end(), "Self meets without end bound");
+                        let end = self.end().value().expect("Self meets without end bound");
                         ContinuousRange::single(end.clone())
                     }
                     RangesRelation::IsMet => {
-                        let start = expect_bound(self.start(), "Self is met without start bound");
+                        let start = self
+                            .start()
+                            .value()
+                            .expect("Self is met without start bound");
                         ContinuousRange::single(start.clone())
                     }
                     RangesRelation::Overlaps => {
