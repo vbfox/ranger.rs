@@ -452,6 +452,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn union(&self, other: &ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>>
     where
         Idx: PartialOrd + std::fmt::Debug,
@@ -503,6 +504,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn intersection(&self, other: &ContinuousRange<Idx>) -> ContinuousRange<Idx>
     where
         Idx: PartialOrd + std::fmt::Debug,
@@ -554,6 +556,7 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
     }
 
     #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn difference(&self, other: &ContinuousRange<Idx>) -> Option<ContinuousRange<Idx>>
     where
         Idx: PartialOrd + std::fmt::Debug,
