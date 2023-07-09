@@ -242,7 +242,7 @@ impl<Idx: PartialOrd + Clone> Range<Idx> {
                 // - Ranges with only one element
                 // - Merge overlapping ranges
                 // - ...
-                for item in v.iter_mut() {
+                for item in &mut *v {
                     item.simplify_mut();
                 }
             }
@@ -343,7 +343,7 @@ impl<Idx: fmt::Debug> fmt::Debug for Range<Idx> {
             Range::Composite(r) => {
                 write!(fmt, "{{")?;
                 let mut first = true;
-                for child in r.iter() {
+                for child in r {
                     if first {
                         first = false;
                     } else {
