@@ -679,8 +679,8 @@ impl<Idx: PartialOrd + Clone> ContinuousRange<Idx> {
 
         // Should be unreachable if PartialOrd contract is correctly implemented
         panic!(
-            r#"PartialOrd contract isn't correctly implemented.
-No ordering can be found between {self:?} and {other:?}"#,
+            r"PartialOrd contract isn't correctly implemented.
+No ordering can be found between {self:?} and {other:?}",
             self = &self,
             other = &other
         );
