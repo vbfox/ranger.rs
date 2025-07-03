@@ -749,15 +749,12 @@ No ordering can be found between {self:?} and {other:?}",
 
     #[must_use]
     pub fn is_full(&self) -> bool {
-        match self {
-            Self::Full => true,
-            _ => false,
-        }
+        matches!(self, Self::Full)
     }
 }
 
 impl<Idx: PartialOrd + Clone> From<()> for ContinuousRange<Idx> {
-    fn from(_: ()) -> Self {
+    fn from((): ()) -> Self {
         Self::empty()
     }
 }

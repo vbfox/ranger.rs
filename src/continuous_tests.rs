@@ -4,115 +4,115 @@ mod test_fmt_debug {
     #[test]
     pub fn empty() {
         let r = ContinuousRange::<i32>::Empty;
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn single() {
         let r = ContinuousRange::Single(5);
-        assert_eq!(format!("{:?}", r), "5");
+        assert_eq!(format!("{r:?}"), "5");
     }
 
     #[test]
     pub fn inclusive() {
         let r = ContinuousRange::Inclusive(1, 5);
-        assert_eq!(format!("{:?}", r), "[1..5]");
+        assert_eq!(format!("{r:?}"), "[1..5]");
     }
 
     #[test]
     pub fn inclusive_equal() {
         let r = ContinuousRange::Inclusive(1, 1);
-        assert_eq!(format!("{:?}", r), "[1..1]");
+        assert_eq!(format!("{r:?}"), "[1..1]");
     }
 
     #[test]
     pub fn inclusive_inverted() {
         let r = ContinuousRange::Inclusive(5, 1);
-        assert_eq!(format!("{:?}", r), "[5..1]");
+        assert_eq!(format!("{r:?}"), "[5..1]");
     }
 
     #[test]
     pub fn exclusive() {
         let r = ContinuousRange::Exclusive(1, 5);
-        assert_eq!(format!("{:?}", r), "(1..5)");
+        assert_eq!(format!("{r:?}"), "(1..5)");
     }
 
     #[test]
     pub fn exclusive_equal() {
         let r = ContinuousRange::Exclusive(1, 1);
-        assert_eq!(format!("{:?}", r), "(1..1)");
+        assert_eq!(format!("{r:?}"), "(1..1)");
     }
 
     #[test]
     pub fn exclusive_inverted() {
         let r = ContinuousRange::Exclusive(5, 1);
-        assert_eq!(format!("{:?}", r), "(5..1)");
+        assert_eq!(format!("{r:?}"), "(5..1)");
     }
 
     #[test]
     pub fn start_exclusive() {
         let r = ContinuousRange::StartExclusive(1, 5);
-        assert_eq!(format!("{:?}", r), "(1..5]");
+        assert_eq!(format!("{r:?}"), "(1..5]");
     }
 
     #[test]
     pub fn start_exclusive_equal() {
         let r = ContinuousRange::StartExclusive(1, 1);
-        assert_eq!(format!("{:?}", r), "(1..1]");
+        assert_eq!(format!("{r:?}"), "(1..1]");
     }
 
     #[test]
     pub fn start_exclusive_inverted() {
         let r = ContinuousRange::StartExclusive(5, 1);
-        assert_eq!(format!("{:?}", r), "(5..1]");
+        assert_eq!(format!("{r:?}"), "(5..1]");
     }
 
     #[test]
     pub fn end_exclusive() {
         let r = ContinuousRange::EndExclusive(1, 5);
-        assert_eq!(format!("{:?}", r), "[1..5)");
+        assert_eq!(format!("{r:?}"), "[1..5)");
     }
 
     #[test]
     pub fn end_exclusive_equal() {
         let r = ContinuousRange::EndExclusive(1, 1);
-        assert_eq!(format!("{:?}", r), "[1..1)");
+        assert_eq!(format!("{r:?}"), "[1..1)");
     }
 
     #[test]
     pub fn end_exclusive_inverted() {
         let r = ContinuousRange::EndExclusive(5, 1);
-        assert_eq!(format!("{:?}", r), "[5..1)");
+        assert_eq!(format!("{r:?}"), "[5..1)");
     }
 
     #[test]
     pub fn full() {
         let r = ContinuousRange::<i32>::Full;
-        assert_eq!(format!("{:?}", r), "(..)");
+        assert_eq!(format!("{r:?}"), "(..)");
     }
 
     #[test]
     pub fn from() {
         let r = ContinuousRange::From(1);
-        assert_eq!(format!("{:?}", r), "[1..)");
+        assert_eq!(format!("{r:?}"), "[1..)");
     }
 
     #[test]
     pub fn from_exclusive() {
         let r = ContinuousRange::FromExclusive(1);
-        assert_eq!(format!("{:?}", r), "(1..)");
+        assert_eq!(format!("{r:?}"), "(1..)");
     }
 
     #[test]
     pub fn to() {
         let r = ContinuousRange::To(5);
-        assert_eq!(format!("{:?}", r), "(..5]");
+        assert_eq!(format!("{r:?}"), "(..5]");
     }
 
     #[test]
     pub fn to_exclusive() {
         let r = ContinuousRange::ToExclusive(5);
-        assert_eq!(format!("{:?}", r), "(..5)");
+        assert_eq!(format!("{r:?}"), "(..5)");
     }
 }
 

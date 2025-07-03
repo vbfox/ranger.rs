@@ -5,127 +5,127 @@ mod test_fmt_debug {
     #[test]
     pub fn empty() {
         let r = Range::<i32>::empty();
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn continuous() {
         let r: Range<_> = (1..=5).into();
-        assert_eq!(format!("{:?}", r), "[1..5]");
+        assert_eq!(format!("{r:?}"), "[1..5]");
     }
 
     #[test]
     pub fn continuous_equal() {
         let r: Range<_> = (1..=1).into();
-        assert_eq!(format!("{:?}", r), "1");
+        assert_eq!(format!("{r:?}"), "1");
     }
 
     #[test]
     pub fn continuous_inverted() {
         let r: Range<_> = (5..=1).into();
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn continuous_exclusive() {
         let r: Range<_> = Range::continuous_exclusive(1, 5);
-        assert_eq!(format!("{:?}", r), "(1..5)");
+        assert_eq!(format!("{r:?}"), "(1..5)");
     }
 
     #[test]
     pub fn continuous_exclusive_equal() {
         let r: Range<_> = Range::continuous_exclusive(1, 1);
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn continuous_exclusive_inverted() {
         let r: Range<_> = Range::continuous_exclusive(5, 1);
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn continuous_start_exclusive() {
         let r: Range<_> = Range::continuous_start_exclusive(1, 5);
-        assert_eq!(format!("{:?}", r), "(1..5]");
+        assert_eq!(format!("{r:?}"), "(1..5]");
     }
 
     #[test]
     pub fn continuous_start_exclusive_equal() {
         let r: Range<_> = Range::continuous_start_exclusive(1, 1);
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn continuous_start_exclusive_inverted() {
         let r: Range<_> = Range::continuous_start_exclusive(5, 1);
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn continuous_end_exclusive() {
         let r: Range<_> = (1..5).into();
-        assert_eq!(format!("{:?}", r), "[1..5)");
+        assert_eq!(format!("{r:?}"), "[1..5)");
     }
 
     #[test]
     pub fn continuous_end_exclusive_equal() {
         let r: Range<_> = (1..1).into();
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn continuous_end_exclusive_inverted() {
         let r: Range<_> = (5..1).into();
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn full() {
         let r: Range<u32> = (..).into();
-        assert_eq!(format!("{:?}", r), "(..)");
+        assert_eq!(format!("{r:?}"), "(..)");
     }
 
     #[test]
     pub fn from() {
         let r: Range<_> = (1..).into();
-        assert_eq!(format!("{:?}", r), "[1..)");
+        assert_eq!(format!("{r:?}"), "[1..)");
     }
 
     #[test]
     pub fn from_exclusive() {
         let r: Range<_> = Range::from_exclusive(1);
-        assert_eq!(format!("{:?}", r), "(1..)");
+        assert_eq!(format!("{r:?}"), "(1..)");
     }
 
     #[test]
     pub fn to() {
         let r: Range<_> = (..=5).into();
-        assert_eq!(format!("{:?}", r), "(..5]");
+        assert_eq!(format!("{r:?}"), "(..5]");
     }
 
     #[test]
     pub fn to_exclusive() {
         let r: Range<_> = (..5).into();
-        assert_eq!(format!("{:?}", r), "(..5)");
+        assert_eq!(format!("{r:?}"), "(..5)");
     }
 
     #[test]
     pub fn composite_empty() {
         let r: Range<u32> = Range::composite(vec![]);
-        assert_eq!(format!("{:?}", r), "[]");
+        assert_eq!(format!("{r:?}"), "[]");
     }
 
     #[test]
     pub fn composite_simple() {
         let r: Range<_> = Range::composite(vec![(1..=5).into()]);
-        assert_eq!(format!("{:?}", r), "[1..5]");
+        assert_eq!(format!("{r:?}"), "[1..5]");
     }
 
     #[test]
     pub fn composite_complex() {
         let r: Range<_> = Range::composite(vec![(1..3).into(), (5..).into()]);
-        assert_eq!(format!("{:?}", r), "{[1..3); [5..)}");
+        assert_eq!(format!("{r:?}"), "{[1..3); [5..)}");
     }
 }
 
