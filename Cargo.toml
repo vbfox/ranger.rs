@@ -3,7 +3,7 @@ name = "range_ranger"
 version = "0.2.0"
 authors = ["Julien Roncaglia <julien@roncaglia.fr>"]
 edition = "2018"
-rust-version = "1.61"
+rust-version = "1.63"
 license = "MIT"
 description = "A range library"
 
