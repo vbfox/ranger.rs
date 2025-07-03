@@ -6,6 +6,11 @@ edition = "2018"
 rust-version = "1.63"
 license = "MIT"
 description = "A range library"
+repository = "https://github.com/vbfox/range_ranger"
+documentation = "https://docs.rs/range_ranger"
+readme = "Readme.md"
+keywords = ["range", "interval", "math"]
+categories = ["algorithms", "data-structures"]
 
 [dependencies]
 
